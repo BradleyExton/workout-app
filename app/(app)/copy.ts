@@ -9,5 +9,7 @@ export const homeCopy = {
   statVolume: "Volume kg",
   statStreak: "Streak",
   musclesHeader: "Muscles",
+  cardioHeader: "Cardio",
+  cardioEmpty: "Tap to log",
   signOut: "Sign out",
 } as const;

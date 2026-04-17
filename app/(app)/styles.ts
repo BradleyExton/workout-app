@@ -33,5 +33,16 @@ export const ctaInner = "pointer-events-auto flex items-center justify-center ga
 
 export const resumeDot = "w-2.5 h-2.5 rounded-full bg-lime shadow-[0_0_8px_#c8ff2d]";
 
+export const cardioHeader = "kicker opacity-70 mt-2";
+export const cardioLink = "block";
+export const cardioCard = "p-3 flex items-center gap-3";
+export const cardioMascot = "w-10 h-10 flex-shrink-0";
+export const cardioBody = "flex-1";
+export const cardioTopRow = "flex items-center justify-between";
+export const cardioTitle = "display text-sm";
+export const cardioStats = "kicker";
+export const cardioEmpty = "text-xs font-bold opacity-60";
+export const cardioPips = "flex gap-1 mt-1.5";
+
 export const signOutRow = "flex justify-center pt-2";
 export const signOutBtn = "kicker opacity-50";

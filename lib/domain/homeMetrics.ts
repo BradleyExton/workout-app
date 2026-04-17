@@ -15,12 +15,19 @@ export type MuscleCoverage = {
   overdue: boolean;
 };
 
+export type CardioMetrics = {
+  sessionsThisWeek: number;
+  distanceMeters: number;
+  durationSec: number;
+};
+
 export type HomeMetrics = {
   coverage: MuscleCoverage[];
   groupsHitThisWeek: number;
   workoutsThisWeek: number;
   volumeThisWeek: number;
   streakDays: number;
+  cardio: CardioMetrics;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -32,9 +39,16 @@ const dayKey = (iso: string | Date): string => {
   return date.toISOString().slice(0, 10);
 };
 
+type CardioSessionRecord = {
+  started_at: string;
+  duration_sec: number;
+  distance_m: number | null;
+};
+
 export const deriveHomeMetrics = (
   sets: SetRecord[],
   workoutStartedAts: string[],
+  cardioSessions: CardioSessionRecord[],
   now: Date = new Date(),
 ): HomeMetrics => {
   const weekAgoMs = now.getTime() - WEEK_DAYS * MS_PER_DAY;
@@ -93,11 +107,20 @@ export const deriveHomeMetrics = (
     cursor = new Date(cursor.getTime() - MS_PER_DAY);
   }
 
+  const weekCardio = cardioSessions.filter(
+    (c) => new Date(c.started_at).getTime() >= weekAgoMs,
+  );
+
   return {
     coverage,
     groupsHitThisWeek,
     workoutsThisWeek: weekWorkoutIds.size,
     volumeThisWeek,
     streakDays,
+    cardio: {
+      sessionsThisWeek: weekCardio.length,
+      distanceMeters: weekCardio.reduce((sum, c) => sum + (c.distance_m ?? 0), 0),
+      durationSec: weekCardio.reduce((sum, c) => sum + c.duration_sec, 0),
+    },
   };
 };

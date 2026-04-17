@@ -15,6 +15,8 @@ import { signOut } from "./actions";
 import { homeCopy } from "./copy";
 import * as styles from "./styles";
 
+const CARDIO_TARGET_PER_WEEK = 3;
+
 const formatHeaderDate = (now: Date): string => {
   const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
   const mdy = now.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -43,6 +45,7 @@ export default async function HomePage(): Promise<JSX.Element> {
     { data: activeWorkout },
     { data: rawSets },
     { data: finishedWorkouts },
+    { data: rawCardio },
   ] = await Promise.all([
     supabase
       .from("workouts")
@@ -62,6 +65,10 @@ export default async function HomePage(): Promise<JSX.Element> {
       .select("started_at")
       .not("finished_at", "is", null)
       .gte("started_at", since60),
+    supabase
+      .from("cardio_sessions")
+      .select("started_at, duration_sec, distance_m")
+      .gte("started_at", since30),
   ]);
 
   type RawSetRow = {
@@ -96,8 +103,18 @@ export default async function HomePage(): Promise<JSX.Element> {
   });
 
   const workoutStartedAts = (finishedWorkouts ?? []).map((w) => w.started_at);
+  const cardioSessions = (rawCardio ?? []).map((row) => ({
+    started_at: row.started_at,
+    duration_sec: row.duration_sec,
+    distance_m: row.distance_m,
+  }));
   const now = currentDate();
-  const metrics = deriveHomeMetrics(flatSets, workoutStartedAts, now);
+  const metrics = deriveHomeMetrics(
+    flatSets,
+    workoutStartedAts,
+    cardioSessions,
+    now,
+  );
 
   const headerDate = formatHeaderDate(now);
   const displayName = deriveName(user?.email);
@@ -173,6 +190,36 @@ export default async function HomePage(): Promise<JSX.Element> {
           </Card>
         ))}
       </div>
+
+      <h2 className={styles.cardioHeader}>{homeCopy.cardioHeader}</h2>
+      <Link href="/cardio/new" className={styles.cardioLink}>
+        <Card size="sm" className={styles.cardioCard}>
+          <Mascot kind="run" className={styles.cardioMascot} />
+          <div className={styles.cardioBody}>
+            <div className={styles.cardioTopRow}>
+              <p className={styles.cardioTitle}>CARDIO</p>
+              {metrics.cardio.sessionsThisWeek > 0 ? (
+                <p className={styles.cardioStats}>
+                  {metrics.cardio.distanceMeters > 0 &&
+                    `${(metrics.cardio.distanceMeters / 1000).toFixed(1)} km · `}
+                  {Math.round(metrics.cardio.durationSec / 60)} min
+                </p>
+              ) : (
+                <p className={styles.cardioEmpty}>{homeCopy.cardioEmpty}</p>
+              )}
+            </div>
+            <div className={styles.cardioPips}>
+              <PipRow
+                filled={Math.min(
+                  metrics.cardio.sessionsThisWeek,
+                  CARDIO_TARGET_PER_WEEK,
+                )}
+                total={CARDIO_TARGET_PER_WEEK}
+              />
+            </div>
+          </div>
+        </Card>
+      </Link>
 
       <form action={signOut} className={styles.signOutRow}>
         <button type="submit" className={styles.signOutBtn}>
