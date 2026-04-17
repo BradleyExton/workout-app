@@ -1,8 +1,9 @@
 // DEV ONLY. Mints a session without the magic-link email round-trip.
 //
-// Two guards required:
+// Gated by `serverEnv.allowTestLogin()`, which requires:
 //   - NODE_ENV !== "production"
-//   - ALLOW_TEST_LOGIN === "true"  (explicit opt-in, must be set in .env.local)
+//   - VERCEL_ENV !== "production" && VERCEL_ENV !== "preview"
+//   - ALLOW_TEST_LOGIN === "true"
 //
 // Uses the service role key (bypasses RLS). Never enable in production:
 // doing so makes every account trivially takeoverable by email address alone.
@@ -11,22 +12,11 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/db/types";
-
-const isAllowed = (): boolean =>
-  process.env.NODE_ENV !== "production" &&
-  process.env.ALLOW_TEST_LOGIN === "true";
+import { SUPABASE_ANON_KEY, SUPABASE_URL, serverEnv } from "@/lib/env";
 
 export const GET = async (request: NextRequest): Promise<NextResponse> => {
-  if (!isAllowed()) {
+  if (!serverEnv.allowTestLogin()) {
     return new NextResponse("Not found", { status: 404 });
-  }
-
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    return new NextResponse(
-      "SUPABASE_SERVICE_ROLE_KEY not configured in .env.local",
-      { status: 500 },
-    );
   }
 
   const { searchParams, origin } = new URL(request.url);
@@ -37,11 +27,9 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
 
   console.warn(`[test-login] minting session for ${email}`);
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+  const admin = createAdminClient(SUPABASE_URL, serverEnv.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
   const { data, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
@@ -57,9 +45,12 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
   const next = searchParams.get("next") ?? "/";
   const response = NextResponse.redirect(`${origin}${next}`);
 
+  // Write cookies directly onto the redirect response so they survive the
+  // 307 — doing this via next/headers cookies() loses them on route handler
+  // redirects in Next 16.
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
