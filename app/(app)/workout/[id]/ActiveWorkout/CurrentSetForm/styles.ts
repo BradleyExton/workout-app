@@ -1,14 +1,14 @@
 export const card = "p-4";
 export const header = "flex items-center gap-2 mb-3";
-export const setNumber = "font-display tracking-display text-lg w-7 text-center";
+export const setNumber = "display text-lg w-7 text-center";
 export const label = "text-xs font-black uppercase tracking-widest";
 
 export const grid = "grid grid-cols-2 gap-2";
 export const field =
-  "border-[2.5px] border-ink rounded-[10px] shadow-brutal-sm bg-white text-ink p-3 flex flex-col items-center gap-1";
+  "brutalist-sm bg-white text-ink p-3 flex flex-col items-center gap-1";
 export const fieldLabel = "text-[9px] font-black uppercase opacity-70";
 export const input =
-  "font-display tracking-display text-3xl w-full text-center bg-transparent outline-none focus:text-ink [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+  "display text-3xl w-full text-center bg-transparent outline-none focus:text-ink [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 export const fieldUnit = "text-[10px] font-bold opacity-60";
 
 export const ctaZone =

@@ -1,5 +1,5 @@
-export const md = "border-[3px] border-ink rounded-xl shadow-brutal";
-export const sm = "border-[2.5px] border-ink rounded-[10px] shadow-brutal-sm";
+export const md = "brutalist-md";
+export const sm = "brutalist-sm";
 
 export const variant = {
   white: "bg-white text-ink",

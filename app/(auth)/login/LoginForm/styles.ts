@@ -1,5 +1,5 @@
 export const form = "flex w-full max-w-sm flex-col gap-4";
-export const heading = "font-display tracking-display text-3xl";
+export const heading = "display text-3xl";
 export const subheading = "text-sm opacity-70";
 export const label = "flex flex-col gap-1 text-xs font-black uppercase tracking-widest";
 export const input =

@@ -18,6 +18,25 @@
   --tracking-display: 0.02em;
 }
 
+/* Extract load-bearing class combos once they repeat 3+ times across styles.ts
+ * files. Keep this list short — if a pattern only appears twice, inline it. */
+
+@utility brutalist-sm {
+  @apply border-[2.5px] border-ink rounded-[10px] shadow-brutal-sm;
+}
+
+@utility brutalist-md {
+  @apply border-[3px] border-ink rounded-xl shadow-brutal;
+}
+
+@utility kicker {
+  @apply text-[10px] font-black uppercase tracking-widest;
+}
+
+@utility display {
+  @apply font-display tracking-display;
+}
+
 body {
   color: var(--color-ink);
   background-color: var(--color-paper);
