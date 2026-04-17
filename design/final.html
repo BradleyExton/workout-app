@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workout App — Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bricolage+Grotesque:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Bricolage Grotesque', sans-serif; background: #1a1a1a; }
+      .phone {
+        width: 390px;
+        height: 844px;
+        border-radius: 48px;
+        border: 10px solid #000;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 2px #222 inset;
+        overflow: hidden;
+        position: relative;
+      }
+      .notch {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 110px;
+        height: 30px;
+        background: #000;
+        border-radius: 18px;
+        z-index: 50;
+      }
+      .status-bar {
+        height: 44px;
+        padding: 14px 28px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 600;
+        position: relative;
+        z-index: 40;
+      }
+      .screen-body { height: calc(100% - 44px); overflow-y: auto; }
+      .screen-body::-webkit-scrollbar { display: none; }
+
+      .app {
+        color: #0a0a0a;
+        background-color: #f5f1e3;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      .app .status-bar { color: #0a0a0a; }
+
+      .card {
+        border: 3px solid #0a0a0a;
+        box-shadow: 5px 5px 0 #0a0a0a;
+        border-radius: 12px;
+      }
+      .card-sm {
+        border: 2.5px solid #0a0a0a;
+        box-shadow: 3px 3px 0 #0a0a0a;
+        border-radius: 10px;
+      }
+
+      .lime { background: #c8ff2d; }
+      .pink { background: #0a0a0a; color: white; }
+      .yellow { background: #c8ff2d; }
+      .red { background: #ff6b35; color: white; }
+      .teal { background: #ffffff; color: #0a0a0a; }
+      .black { background: #0a0a0a; color: #c8ff2d; }
+      .cream { background: #fff8e3; }
+
+      .display {
+        font-family: 'Bungee', sans-serif;
+        letter-spacing: 0.02em;
+      }
+
+      .nav-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff8e3;
+        border-top: 3px solid #0a0a0a;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding: 8px 6px 16px;
+        z-index: 45;
+        gap: 4px;
+      }
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 6px 0 5px;
+        border-radius: 10px;
+        border: 2px solid transparent;
+      }
+      .nav-item.active {
+        background: #c8ff2d;
+        border-color: #0a0a0a;
+      }
+      .nav-label {
+        font-family: 'Bungee', sans-serif;
+        font-size: 9px;
+        letter-spacing: 0.05em;
+      }
+      .cta-zone {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 76px;
+        padding: 28px 16px 16px;
+        z-index: 44;
+        background: linear-gradient(to bottom, rgba(245,241,227,0) 0%, rgba(245,241,227,0.95) 40%, #f5f1e3 100%);
+        pointer-events: none;
+      }
+      .cta-zone > * { pointer-events: auto; }
+      .cta-zone.no-nav { bottom: 0; padding-bottom: 24px; }
+    </style>
+  </head>
+  <body class="min-h-screen py-12">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <header class="mb-10 text-center text-white">
+        <h1 class="text-3xl font-bold">The final look</h1>
+        <p class="text-neutral-400 mt-2">Playful, chunky, modern brutalist. Mascot + achievements.</p>
+      </header>
+
+      <div class="flex flex-wrap gap-10 justify-center">
+
+        <!-- ============ HOME ============ -->
+        <div class="flex flex-col items-center">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="status-bar app">
+              <span>9:41</span>
+              <span>􀋨 􀛨 100%</span>
+            </div>
+            <div class="screen-body app px-4 pb-44">
+
+              <!-- Header with mascot -->
+              <div class="pt-5 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-widest opacity-70">Thursday · Apr 16</p>
+                  <h2 class="display text-3xl mt-1">HEY,<br/>BRADLEY!</h2>
+                </div>
+                <!-- Mascot: classic flex + thumbs up, tube-articulated -->
+                <div class="w-20 h-20 card lime flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <svg viewBox="0 0 64 64" class="w-[72px] h-[72px]">
+                    <!-- LEFT FLEXING ARM (drawn first so torso covers shoulder) -->
+                    <!-- Upper arm: shoulder (22,38) up-left to elbow (12,23) -->
+                    <line x1="22" y1="38" x2="12" y2="23" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="22" y1="38" x2="12" y2="23" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Forearm: elbow (12,23) back up-right to fist near head -->
+                    <line x1="12" y1="23" x2="21" y2="10" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="12" y1="23" x2="21" y2="10" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Bicep ball at elbow peak -->
+                    <ellipse cx="12" cy="18" rx="5.5" ry="5.5" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <path d="M 9 16 Q 12 20 15 16" fill="none" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round"/>
+                    <!-- Flexed fist -->
+                    <circle cx="22" cy="9" r="3" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <path d="M 20 9 L 24 9" stroke="#0a0a0a" stroke-width="1" fill="none"/>
+
+                    <!-- HAIR BACK -->
+                    <path d="M 23 18 Q 23 10 32 10 Q 41 10 41 18 L 41 22 L 23 22 Z" fill="#3d2817" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <!-- HEAD (square jaw) -->
+                    <path d="M 24 16 L 24 24 Q 24 29 27 31 L 30 33 L 34 33 L 37 31 Q 40 29 40 24 L 40 16 Z" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <!-- CREW CUT TOP -->
+                    <path d="M 24 18 Q 24 12 32 12 Q 40 12 40 18 L 40 20 Q 36 18 32 18 Q 28 18 24 20 Z" fill="#3d2817" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    <!-- HEADBAND (orange accent) -->
+                    <path d="M 24 21 Q 32 18 40 21" fill="none" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- HEAVY BROWS -->
+                    <path d="M 27 23 L 30 23" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 34 23 L 37 23" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+                    <!-- EYES -->
+                    <circle cx="29" cy="25.5" r="1.3" fill="#0a0a0a"/>
+                    <circle cx="35" cy="25.5" r="1.3" fill="#0a0a0a"/>
+                    <!-- SMILE -->
+                    <path d="M 29 29 Q 32 31 35 29" fill="none" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round"/>
+
+                    <!-- NECK -->
+                    <path d="M 28 33 L 28 36 L 36 36 L 36 33 Z" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+
+                    <!-- TORSO (tank top, V-taper broad shoulders) -->
+                    <path d="M 18 38 L 25 35 L 28 36 L 32 36 L 36 36 L 39 35 L 46 38 L 44 50 L 20 50 Z" fill="#ffffff" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <path d="M 28 38 Q 32 41 36 38" fill="none" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round"/>
+                    <text x="32" y="46" text-anchor="middle" font-family="Bungee, sans-serif" font-size="5" fill="#0a0a0a">LIFT</text>
+
+                    <!-- RIGHT THUMBS-UP ARM -->
+                    <!-- Upper arm: shoulder (42,38) out to elbow (50,32) -->
+                    <line x1="42" y1="38" x2="50" y2="32" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="42" y1="38" x2="50" y2="32" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Forearm: elbow up to fist -->
+                    <line x1="50" y1="32" x2="51" y2="22" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="50" y1="32" x2="51" y2="22" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Fist -->
+                    <circle cx="51" cy="20" r="3.2" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <!-- Thumb extended up -->
+                    <rect x="49.5" y="13" width="3" height="6" rx="1.5" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2"/>
+
+                    <!-- LEGS -->
+                    <rect x="24" y="50" width="7" height="10" fill="#0a0a0a"/>
+                    <rect x="33" y="50" width="7" height="10" fill="#0a0a0a"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Coverage hero -->
+              <div class="mt-5 card pink p-4">
+                <p class="text-xs font-black uppercase tracking-widest opacity-90">This Week</p>
+                <div class="flex items-baseline gap-3 mt-2">
+                  <p class="display text-5xl">4</p>
+                  <p class="text-xl font-bold opacity-80">of 6</p>
+                  <p class="text-[10px] font-black uppercase opacity-90 ml-auto leading-tight text-right">muscle<br/>groups<br/>hit</p>
+                </div>
+                <div class="mt-3 flex gap-1">
+                  <div class="h-2 flex-1 bg-white rounded-sm"></div>
+                  <div class="h-2 flex-1 bg-white rounded-sm"></div>
+                  <div class="h-2 flex-1 bg-white rounded-sm"></div>
+                  <div class="h-2 flex-1 bg-white rounded-sm"></div>
+                  <div class="h-2 flex-1 bg-white/20 rounded-sm"></div>
+                  <div class="h-2 flex-1 bg-white/20 rounded-sm"></div>
+                </div>
+              </div>
+
+              <!-- Stats row -->
+              <div class="mt-3 grid grid-cols-3 gap-2">
+                <div class="card-sm yellow p-2 text-center">
+                  <p class="text-[9px] font-black uppercase">Workouts</p>
+                  <p class="display text-2xl mt-0.5">3</p>
+                </div>
+                <div class="card-sm teal p-2 text-center">
+                  <p class="text-[9px] font-black uppercase">Volume lbs</p>
+                  <p class="display text-2xl mt-0.5">42k</p>
+                </div>
+                <div class="card-sm black p-2 text-center">
+                  <p class="text-[9px] font-black uppercase">Streak</p>
+                  <p class="display text-2xl mt-0.5">7d</p>
+                </div>
+              </div>
+
+              <!-- Achievements -->
+              <div class="mt-4 card cream p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Achievements</p>
+                    <p class="display text-lg leading-tight">YOUR GOALS</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-[9px] font-black uppercase opacity-70">Unlocked</p>
+                    <p class="display text-2xl leading-none">3/12</p>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <!-- Earned -->
+                  <div class="flex items-center gap-3 p-2 yellow border-2 border-black rounded">
+                    <svg viewBox="0 0 40 40" class="w-10 h-10 flex-shrink-0">
+                      <!-- bench mascot -->
+                      <circle cx="20" cy="18" r="4" fill="#ffd9b3" stroke="#000" stroke-width="1.5"/>
+                      <rect x="10" y="22" width="20" height="5" fill="#ffffff" stroke="#000" stroke-width="1.5" rx="1"/>
+                      <rect x="8" y="27" width="24" height="2" fill="#000"/>
+                      <rect x="4" y="12" width="32" height="1.5" fill="#000"/>
+                      <circle cx="6" cy="12.75" r="2" fill="#000"/>
+                      <circle cx="34" cy="12.75" r="2" fill="#000"/>
+                      <path d="M 13 20 L 13 14 M 27 20 L 27 14" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                      <path d="M 28 25 L 34 32" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <div class="flex-1">
+                      <p class="text-sm font-black uppercase tracking-wide leading-tight">Iron Chest · I</p>
+                      <p class="text-[10px] font-semibold">Bench 225 × 5 · Earned Tue</p>
+                    </div>
+                    <svg viewBox="0 0 24 24" class="w-6 h-6 flex-shrink-0">
+                      <path d="M 12 2 L 15 9 L 22 9.5 L 16.5 14.5 L 18.5 21.5 L 12 17.5 L 5.5 21.5 L 7.5 14.5 L 2 9.5 L 9 9 Z" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+
+                  <!-- In progress -->
+                  <div class="flex items-center gap-3 p-2 bg-white border-2 border-black rounded">
+                    <svg viewBox="0 0 40 40" class="w-10 h-10 flex-shrink-0">
+                      <!-- flex mascot -->
+                      <circle cx="20" cy="14" r="5" fill="#ffd9b3" stroke="#000" stroke-width="1.5"/>
+                      <rect x="15" y="11.5" width="10" height="1.5" fill="#0a0a0a"/>
+                      <circle cx="18" cy="14" r="1" fill="#000"/>
+                      <circle cx="22" cy="14" r="1" fill="#000"/>
+                      <path d="M 15 18 Q 15 26 17 32 L 23 32 Q 25 26 25 18 Z" fill="#fff" stroke="#000" stroke-width="1.5"/>
+                      <path d="M 15 20 Q 8 16 6 8 Q 8 6 12 8 Q 14 16 15 20 Z" fill="#ffd9b3" stroke="#000" stroke-width="1.5"/>
+                      <path d="M 25 20 Q 32 16 34 8 Q 32 6 28 8 Q 26 16 25 20 Z" fill="#ffd9b3" stroke="#000" stroke-width="1.5"/>
+                      <path d="M 17 32 L 14 38 M 23 32 L 26 38" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <div class="flex-1">
+                      <p class="text-sm font-black uppercase tracking-wide leading-tight">Steel Biceps · I</p>
+                      <p class="text-[10px] font-semibold opacity-70">Curl 50 × 10</p>
+                      <div class="mt-1 h-1.5 bg-black/15 rounded-full overflow-hidden">
+                        <div class="h-full" style="width: 75%; background: #c8ff2d; border-right: 1.5px solid #000;"></div>
+                      </div>
+                    </div>
+                    <span class="text-xs font-black">75%</span>
+                  </div>
+
+                </div>
+
+                <button class="mt-3 w-full py-2 border-2 border-black border-dashed text-xs font-black uppercase tracking-widest hover:bg-black/5 rounded">
+                  See all 12 →
+                </button>
+              </div>
+
+              <!-- Muscle grid -->
+              <h3 class="mt-5 text-[10px] font-black uppercase tracking-widest opacity-70">Muscles</h3>
+              <div class="mt-2 grid grid-cols-3 gap-2">
+                <div class="card-sm bg-white p-2">
+                  <p class="display text-sm">CHEST</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1">2d</p>
+                </div>
+                <div class="card-sm bg-white p-2">
+                  <p class="display text-sm">BACK</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1">5d</p>
+                </div>
+                <div class="card-sm bg-white p-2">
+                  <p class="display text-sm">SHOULDERS</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1">3d</p>
+                </div>
+                <div class="card-sm bg-white p-2">
+                  <p class="display text-sm">ARMS</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1">2d</p>
+                </div>
+                <div class="card-sm bg-neutral-200 p-2">
+                  <p class="display text-sm">LEGS</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1 flex items-center gap-1"><span class="inline-block w-1.5 h-1.5 rounded-full" style="background:#ff6b35"></span>9d</p>
+                </div>
+                <div class="card-sm bg-white p-2">
+                  <p class="display text-sm">CORE</p>
+                  <div class="flex gap-0.5 mt-1">
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                    <div class="h-1.5 flex-1 bg-black/15"></div>
+                  </div>
+                  <p class="text-[9px] font-bold mt-1">4d</p>
+                </div>
+              </div>
+
+              <!-- Cardio -->
+              <h3 class="mt-5 text-[10px] font-black uppercase tracking-widest opacity-70">Cardio</h3>
+              <div class="mt-2 card-sm bg-white p-3 flex items-center gap-3">
+                <svg viewBox="0 0 40 40" class="w-10 h-10 flex-shrink-0">
+                  <!-- running mascot -->
+                  <circle cx="22" cy="10" r="4" fill="#ffd9b3" stroke="#000" stroke-width="1.5"/>
+                  <rect x="18" y="7.5" width="8" height="1.5" fill="#0a0a0a"/>
+                  <path d="M 20 14 Q 18 20 20 26 L 26 26 Q 27 20 26 14 Z" fill="#ffffff" stroke="#000" stroke-width="1.5"/>
+                  <!-- arms swinging -->
+                  <path d="M 20 16 Q 14 14 12 20" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <path d="M 26 16 Q 32 18 33 22" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <!-- legs running -->
+                  <path d="M 21 26 Q 18 30 14 32" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <path d="M 25 26 Q 28 30 30 36" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+                  <!-- motion lines -->
+                  <path d="M 6 12 L 10 12 M 5 16 L 9 16 M 7 20 L 11 20" stroke="#000" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <p class="display text-sm">CARDIO</p>
+                    <p class="text-[10px] font-black uppercase">7.5 KM · 45 MIN</p>
+                  </div>
+                  <div class="flex gap-1 mt-1.5">
+                    <div class="h-2 flex-1 bg-black rounded-sm"></div>
+                    <div class="h-2 flex-1 bg-black rounded-sm"></div>
+                    <div class="h-2 flex-1 bg-black/15 rounded-sm"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Floating CTA (workout in progress — resume state) -->
+            <div class="cta-zone">
+              <button class="w-full card black py-4 flex items-center justify-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full" style="background: #c8ff2d; box-shadow: 0 0 8px #c8ff2d;"></span>
+                <span class="display text-lg">← BACK TO WORKOUT · 42:18</span>
+              </button>
+            </div>
+
+            <!-- Bottom nav -->
+            <div class="nav-bar">
+              <button class="nav-item active">
+                <svg viewBox="0 0 24 24" class="w-6 h-6">
+                  <path d="M 3 11 L 12 3 L 21 11 V 20 H 15 V 14 H 9 V 20 H 3 Z" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">HOME</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <circle cx="12" cy="12" r="9" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+                  <path d="M 12 7 V 12 L 16 14" stroke="#0a0a0a" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="nav-label">HISTORY</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <path d="M 7 4 H 17 V 10 Q 17 14 12 14 Q 7 14 7 10 Z" fill="white" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M 7 6 Q 4 6 4 8.5 Q 4 10 7 10 M 17 6 Q 20 6 20 8.5 Q 20 10 17 10" stroke="#0a0a0a" stroke-width="2" fill="none"/>
+                  <path d="M 10 14 V 17 H 14 V 14 M 8 19 H 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span class="nav-label">GOALS</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <circle cx="12" cy="9" r="4" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+                  <path d="M 4 21 Q 4 14 12 14 Q 20 14 20 21" fill="white" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">YOU</span>
+              </button>
+            </div>
+          </div>
+          <p class="mt-4 font-bold text-lg text-white">HOME</p>
+          <p class="text-xs text-neutral-400 text-center max-w-[340px] mt-1">Mascot + muscle coverage + achievements. Playful, readable, modern.</p>
+        </div>
+
+        <!-- ============ ACTIVE WORKOUT ============ -->
+        <div class="flex flex-col items-center">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="status-bar app">
+              <span>9:41</span>
+              <span>􀋨 􀛨 100%</span>
+            </div>
+            <div class="screen-body app px-4 pb-32">
+
+              <!-- Top bar -->
+              <div class="pt-4 flex items-center justify-between">
+                <button class="text-xs font-bold uppercase tracking-wide opacity-60 px-2 py-1.5">← Back</button>
+                <div class="card-sm black px-3 py-1.5 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full" style="background: #c8ff2d; box-shadow: 0 0 8px #c8ff2d;"></span>
+                  <span class="display text-sm">42:18</span>
+                </div>
+                <button class="text-xs font-black uppercase tracking-widest px-3 py-1.5 border-2 border-black rounded-lg bg-white">Finish</button>
+              </div>
+
+              <!-- Current exercise hero -->
+              <div class="mt-4 card lime p-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded-full border-2 border-black uppercase">Chest</span>
+                  <span class="text-[10px] font-black">SET 3 OF 4</span>
+                </div>
+                <h2 class="display text-3xl mt-2 leading-none">BENCH<br/>PRESS</h2>
+                <p class="text-xs font-bold mt-1 opacity-80">Barbell</p>
+              </div>
+
+              <!-- Last session -->
+              <div class="mt-3 card cream p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Last session · 4d ago</p>
+                  <span class="text-[10px] font-black lime px-1.5 py-0.5 rounded border-2 border-black">+10 LB</span>
+                </div>
+                <div class="flex gap-1.5 text-sm font-bold">
+                  <span class="bg-white border-2 border-black px-2 py-1 rounded">215×5</span>
+                  <span class="bg-white border-2 border-black px-2 py-1 rounded">215×5</span>
+                  <span class="bg-white border-2 border-black px-2 py-1 rounded">225×3</span>
+                </div>
+              </div>
+
+              <!-- Sets -->
+              <div class="mt-3 space-y-2">
+                <!-- Done set 1 -->
+                <div class="card-sm bg-white p-3 flex items-center gap-3">
+                  <span class="display text-lg w-7 text-center">1</span>
+                  <span class="font-bold flex-1">225 × 5</span>
+                  <span class="w-6 h-6 rounded-full lime flex items-center justify-center border-2 border-black text-xs font-black">✓</span>
+                </div>
+                <!-- Done set 2 -->
+                <div class="card-sm bg-white p-3 flex items-center gap-3">
+                  <span class="display text-lg w-7 text-center">2</span>
+                  <span class="font-bold flex-1">225 × 5</span>
+                  <span class="w-6 h-6 rounded-full lime flex items-center justify-center border-2 border-black text-xs font-black">✓</span>
+                </div>
+                <!-- Active set -->
+                <div class="card yellow p-4">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="display text-lg w-7 text-center">3</span>
+                    <span class="text-xs font-black uppercase tracking-widest">Current Set</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="card-sm bg-white p-3 text-center">
+                      <p class="text-[9px] font-black uppercase opacity-70">Weight</p>
+                      <p class="display text-3xl mt-1">225</p>
+                      <p class="text-[10px] font-bold opacity-60">lbs</p>
+                    </div>
+                    <div class="card-sm bg-white p-3 text-center">
+                      <p class="text-[9px] font-black uppercase opacity-70">Reps</p>
+                      <p class="display text-3xl mt-1">5</p>
+                      <p class="text-[10px] font-bold opacity-60">reps</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Session stats -->
+              <div class="mt-3 card-sm cream p-3">
+                <p class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Session</p>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p class="display text-xl">8,925</p>
+                    <p class="text-[9px] font-bold uppercase opacity-60">Volume</p>
+                  </div>
+                  <div>
+                    <p class="display text-xl">9</p>
+                    <p class="text-[9px] font-bold uppercase opacity-60">Sets</p>
+                  </div>
+                  <div>
+                    <p class="display text-xl">3</p>
+                    <p class="text-[9px] font-bold uppercase opacity-60">Exercises</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Exercises today -->
+              <div class="mt-4">
+                <p class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Today</p>
+                <div class="space-y-2">
+                  <div class="card-sm bg-white p-2.5 flex justify-between items-center">
+                    <span class="font-bold text-sm">Incline DB Press</span>
+                    <span class="text-[10px] font-bold opacity-70">3 × 60</span>
+                  </div>
+                  <div class="card-sm bg-white p-2.5 flex justify-between items-center">
+                    <span class="font-bold text-sm">Cable Fly</span>
+                    <span class="text-[10px] font-bold opacity-70">3 × 40</span>
+                  </div>
+                </div>
+                <button class="mt-2 w-full py-3 border-2 border-black border-dashed text-xs font-black uppercase tracking-widest rounded-lg">
+                  + Add exercise
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Sticky LOG SET -->
+            <div class="cta-zone no-nav">
+              <button class="w-full card black py-4">
+                <span class="display text-xl">LOG SET →</span>
+              </button>
+            </div>
+          </div>
+          <p class="mt-4 font-bold text-lg text-white">ACTIVE WORKOUT</p>
+          <p class="text-xs text-neutral-400 text-center max-w-[340px] mt-1">Readable brutalist. Last session + achievement progress celebrated.</p>
+        </div>
+
+        <!-- ============ FINISH MODAL ============ -->
+        <div class="flex flex-col items-center">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="status-bar app">
+              <span>9:41</span>
+              <span>􀋨 􀛨 100%</span>
+            </div>
+            <div class="screen-body app px-4 pb-32" style="position: relative;">
+
+              <!-- dimmed workout behind -->
+              <div style="opacity: 0.35; pointer-events: none;">
+                <div class="pt-4 flex items-center justify-between">
+                  <button class="text-xs font-bold uppercase tracking-wide opacity-60 px-2 py-1.5">← Back</button>
+                  <div class="card-sm black px-3 py-1.5 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" style="background: #c8ff2d; box-shadow: 0 0 8px #c8ff2d;"></span>
+                    <span class="display text-sm">42:18</span>
+                  </div>
+                  <button class="text-xs font-black uppercase tracking-widest px-3 py-1.5 border-2 border-black rounded-lg bg-white">Finish</button>
+                </div>
+                <div class="mt-4 card lime p-4">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded-full border-2 border-black uppercase">Chest</span>
+                    <span class="text-[10px] font-black">SET 3 OF 4</span>
+                  </div>
+                  <h2 class="display text-3xl mt-2 leading-none">BENCH<br/>PRESS</h2>
+                </div>
+              </div>
+
+              <!-- modal backdrop -->
+              <div style="position: absolute; inset: 0; background: rgba(10,10,10,0.5); z-index: 50;"></div>
+
+              <!-- modal card -->
+              <div class="card cream p-5" style="position: absolute; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); z-index: 51;">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Done here?</p>
+                    <h3 class="display text-2xl mt-1 leading-tight">END<br/>WORKOUT?</h3>
+                  </div>
+                  <button class="w-8 h-8 flex items-center justify-center border-2 border-black rounded-lg bg-white flex-shrink-0" aria-label="Close">
+                    <span class="font-black text-lg leading-none">×</span>
+                  </button>
+                </div>
+
+                <div class="mt-4 card-sm bg-white p-3 flex items-center justify-between">
+                  <div>
+                    <p class="text-[9px] font-black uppercase opacity-70">Time</p>
+                    <p class="display text-lg leading-none mt-0.5">42:18</p>
+                  </div>
+                  <div class="w-px h-8 bg-black/20"></div>
+                  <div>
+                    <p class="text-[9px] font-black uppercase opacity-70">Sets</p>
+                    <p class="display text-lg leading-none mt-0.5">12</p>
+                  </div>
+                  <div class="w-px h-8 bg-black/20"></div>
+                  <div>
+                    <p class="text-[9px] font-black uppercase opacity-70">Volume</p>
+                    <p class="display text-lg leading-none mt-0.5">8,240</p>
+                  </div>
+                </div>
+
+                <button class="mt-4 w-full card black py-3.5">
+                  <span class="display text-lg">FINISH &amp; SAVE →</span>
+                </button>
+                <button class="mt-3 w-full text-center py-2 text-xs font-black uppercase tracking-widest" style="color: #ff6b35;">
+                  Discard workout
+                </button>
+              </div>
+
+            </div>
+          </div>
+          <p class="mt-4 font-bold text-lg text-white">FINISH MODAL</p>
+          <p class="text-xs text-neutral-400 text-center max-w-[340px] mt-1">Tapping Finish confirms before saving. Discard is the escape hatch — orange-accented because it's destructive.</p>
+        </div>
+
+        <!-- ============ EMPTY STATE ============ -->
+        <div class="flex flex-col items-center">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="status-bar app">
+              <span>9:41</span>
+              <span>􀋨 􀛨 100%</span>
+            </div>
+            <div class="screen-body app px-4 pb-44">
+
+              <!-- Header with mascot -->
+              <div class="pt-5 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-widest opacity-70">Welcome!</p>
+                  <h2 class="display text-3xl mt-1">HEY,<br/>BRADLEY!</h2>
+                </div>
+                <!-- Mascot: classic flex + thumbs up, tube-articulated -->
+                <div class="w-20 h-20 card lime flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <svg viewBox="0 0 64 64" class="w-[72px] h-[72px]">
+                    <!-- LEFT FLEXING ARM -->
+                    <line x1="22" y1="38" x2="12" y2="23" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="22" y1="38" x2="12" y2="23" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="12" y1="23" x2="21" y2="10" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="12" y1="23" x2="21" y2="10" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <ellipse cx="12" cy="18" rx="5.5" ry="5.5" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <path d="M 9 16 Q 12 20 15 16" fill="none" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round"/>
+                    <circle cx="22" cy="9" r="3" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <path d="M 20 9 L 24 9" stroke="#0a0a0a" stroke-width="1" fill="none"/>
+
+                    <!-- HAIR BACK -->
+                    <path d="M 23 18 Q 23 10 32 10 Q 41 10 41 18 L 41 22 L 23 22 Z" fill="#3d2817" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <!-- HEAD -->
+                    <path d="M 24 16 L 24 24 Q 24 29 27 31 L 30 33 L 34 33 L 37 31 Q 40 29 40 24 L 40 16 Z" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <!-- CREW CUT -->
+                    <path d="M 24 18 Q 24 12 32 12 Q 40 12 40 18 L 40 20 Q 36 18 32 18 Q 28 18 24 20 Z" fill="#3d2817" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                    <!-- HEADBAND -->
+                    <path d="M 24 21 Q 32 18 40 21" fill="none" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- BROWS -->
+                    <path d="M 27 23 L 30 23" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M 34 23 L 37 23" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+                    <!-- EYES -->
+                    <circle cx="29" cy="25.5" r="1.3" fill="#0a0a0a"/>
+                    <circle cx="35" cy="25.5" r="1.3" fill="#0a0a0a"/>
+                    <!-- SMILE -->
+                    <path d="M 29 29 Q 32 31 35 29" fill="none" stroke="#0a0a0a" stroke-width="1.8" stroke-linecap="round"/>
+
+                    <!-- NECK -->
+                    <path d="M 28 33 L 28 36 L 36 36 L 36 33 Z" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+
+                    <!-- TORSO -->
+                    <path d="M 18 38 L 25 35 L 28 36 L 32 36 L 36 36 L 39 35 L 46 38 L 44 50 L 20 50 Z" fill="#ffffff" stroke="#0a0a0a" stroke-width="2.2" stroke-linejoin="round"/>
+                    <path d="M 28 38 Q 32 41 36 38" fill="none" stroke="#0a0a0a" stroke-width="1.3" stroke-linecap="round"/>
+                    <text x="32" y="46" text-anchor="middle" font-family="Bungee, sans-serif" font-size="5" fill="#0a0a0a">LIFT</text>
+
+                    <!-- RIGHT THUMBS-UP ARM -->
+                    <line x1="42" y1="38" x2="50" y2="32" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="42" y1="38" x2="50" y2="32" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <line x1="50" y1="32" x2="51" y2="22" stroke="#0a0a0a" stroke-width="9" stroke-linecap="round"/>
+                    <line x1="50" y1="32" x2="51" y2="22" stroke="#ffd9b3" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="51" cy="20" r="3.2" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2.2"/>
+                    <rect x="49.5" y="13" width="3" height="6" rx="1.5" fill="#ffd9b3" stroke="#0a0a0a" stroke-width="2"/>
+
+                    <!-- LEGS -->
+                    <rect x="24" y="50" width="7" height="10" fill="#0a0a0a"/>
+                    <rect x="33" y="50" width="7" height="10" fill="#0a0a0a"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Welcome hero -->
+              <div class="mt-5 card black p-5">
+                <p class="text-xs font-black uppercase tracking-widest" style="color: #c8ff2d;">Let's Begin</p>
+                <h3 class="display text-3xl mt-2 leading-tight" style="color: white;">YOUR FIRST SET<br/>IS WAITING</h3>
+                <p class="text-xs mt-3" style="color: rgba(255,255,255,0.85);">Pick an exercise. Log your weight and reps. We track the rest — muscle coverage, achievements, and PRs.</p>
+              </div>
+
+              <!-- How it works -->
+              <div class="mt-3 card cream p-4">
+                <p class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3">How It Works</p>
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3">
+                    <div class="card-sm lime w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <span class="display text-base">1</span>
+                    </div>
+                    <p class="text-xs font-semibold">Tap START and pick an exercise</p>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="card-sm lime w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <span class="display text-base">2</span>
+                    </div>
+                    <p class="text-xs font-semibold">Log your sets as you finish them</p>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="card-sm lime w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <span class="display text-base">3</span>
+                    </div>
+                    <p class="text-xs font-semibold">Watch your muscle map fill up all week</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty achievements -->
+              <div class="mt-4 card cream p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-70">Achievements</p>
+                    <p class="display text-lg leading-tight">YOUR GOALS</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-[9px] font-black uppercase opacity-70">Unlocked</p>
+                    <p class="display text-2xl leading-none">0/12</p>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3 p-2 bg-neutral-200 border-2 border-black/40 rounded opacity-70">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                      <svg viewBox="0 0 28 32" class="w-7 h-8">
+                        <path d="M 8 13 V 9 Q 8 3 14 3 Q 20 3 20 9 V 13" stroke="#0a0a0a" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <rect x="3" y="13" width="22" height="16" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="2" rx="2"/>
+                        <circle cx="14" cy="20" r="2" fill="#c8ff2d"/>
+                        <path d="M 14 20 L 14 24" stroke="#c8ff2d" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-black uppercase tracking-wide leading-tight">Iron Chest · I</p>
+                      <p class="text-[10px] font-semibold">Bench 1× bodyweight</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 p-2 bg-neutral-200 border-2 border-black/40 rounded opacity-70">
+                    <div class="w-10 h-10 flex items-center justify-center">
+                      <svg viewBox="0 0 28 32" class="w-7 h-8">
+                        <path d="M 8 13 V 9 Q 8 3 14 3 Q 20 3 20 9 V 13" stroke="#0a0a0a" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <rect x="3" y="13" width="22" height="16" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="2" rx="2"/>
+                        <circle cx="14" cy="20" r="2" fill="#c8ff2d"/>
+                        <path d="M 14 20 L 14 24" stroke="#c8ff2d" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="text-sm font-black uppercase tracking-wide leading-tight">Leg Day Hero · I</p>
+                      <p class="text-[10px] font-semibold">Squat bodyweight</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="mt-3 text-center text-[11px] font-semibold opacity-70">Earn your first star with your first workout.</p>
+              </div>
+
+            </div>
+
+            <!-- Floating CTA -->
+            <div class="cta-zone">
+              <button class="w-full card black py-4">
+                <span class="display text-xl">LOG FIRST SET →</span>
+              </button>
+            </div>
+
+            <!-- Bottom nav -->
+            <div class="nav-bar">
+              <button class="nav-item active">
+                <svg viewBox="0 0 24 24" class="w-6 h-6">
+                  <path d="M 3 11 L 12 3 L 21 11 V 20 H 15 V 14 H 9 V 20 H 3 Z" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">HOME</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <circle cx="12" cy="12" r="9" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+                  <path d="M 12 7 V 12 L 16 14" stroke="#0a0a0a" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="nav-label">HISTORY</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <path d="M 7 4 H 17 V 10 Q 17 14 12 14 Q 7 14 7 10 Z" fill="white" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M 7 6 Q 4 6 4 8.5 Q 4 10 7 10 M 17 6 Q 20 6 20 8.5 Q 20 10 17 10" stroke="#0a0a0a" stroke-width="2" fill="none"/>
+                  <path d="M 10 14 V 17 H 14 V 14 M 8 19 H 16" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span class="nav-label">GOALS</span>
+              </button>
+              <button class="nav-item">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none">
+                  <circle cx="12" cy="9" r="4" fill="white" stroke="#0a0a0a" stroke-width="2"/>
+                  <path d="M 4 21 Q 4 14 12 14 Q 20 14 20 21" fill="white" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="nav-label">YOU</span>
+              </button>
+            </div>
+          </div>
+          <p class="mt-4 font-bold text-lg text-white">EMPTY STATE (Day 1)</p>
+          <p class="text-xs text-neutral-400 text-center max-w-[340px] mt-1">First open. No data yet. Onboarded via "How It Works" + locked achievements as teaser.</p>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="max-w-4xl mx-auto mt-16 bg-white rounded-2xl p-8 shadow-sm">
+        <h2 class="text-xl font-bold mb-4">What changed</h2>
+        <ul class="space-y-2 text-sm text-neutral-700 list-disc pl-5">
+          <li><strong>Dropped:</strong> Vault-Tec branding, "Citizen" language, gear+V logo, propaganda copy, Pip-Boy green terminal.</li>
+          <li><strong>Kept:</strong> chunky Bungee display font, hard black shadows, thick borders, cartoon mascot, bright palette.</li>
+          <li><strong>Mascot refresh:</strong> headband, tank top, dark hair, generic athletic figure — not a Vault-Boy lookalike. Same poses (flex, squat, bench) for different contexts.</li>
+          <li><strong>Perks → Achievements:</strong> renamed per your preference. Same mechanic — unlockable fitness goals with ranks.</li>
+          <li><strong>Active workout is now brutalist too</strong> — same language as home. Readable, fast, no green-on-black eyestrain.</li>
+          <li><strong>New palette accent:</strong> hot pink + lime + yellow (vs. navy + yellow). Feels playful instead of militaristic.</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
