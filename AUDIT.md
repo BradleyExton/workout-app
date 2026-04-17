@@ -9,22 +9,22 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
 
 ## Critical — data integrity
 
-- **[ ] C1. Two-active-workouts race.** `app/(app)/workout/new/actions.ts`
+- **[x] C1. Two-active-workouts race.** `app/(app)/workout/new/actions.ts`
   find-or-create is not atomic. Two rapid picker taps insert two workouts;
   `home` picks one and orphans the other. Fix: partial unique index
   `workouts(user_id) WHERE finished_at IS NULL`, catch 23505 and re-fetch.
-- **[ ] C2. `set_number` race.** `app/(app)/workout/[id]/actions.ts::logSet`
+- **[x] C2. `set_number` race.** `app/(app)/workout/[id]/actions.ts::logSet`
   reads `max(set_number)` then inserts `max+1`. Rapid LOG SET taps can collide.
   Fix: unique `(workout_exercise_id, set_number)` + retry on 23505 (or use a
   single-statement INSERT … SELECT coalesce(max,0)+1).
-- **[ ] C4. Defense-in-depth missing on mutating server actions.** `logSet`,
+- **[x] C4. Defense-in-depth missing on mutating server actions.** `logSet`,
   `finishWorkout`, `discardWorkout` rely on RLS alone. Add `getUser()` +
   `.eq("user_id", user.id)` on every mutation. Matches pattern already used
   in `addExerciseToWorkout`.
 
 ## High — bugs + scaling risks
 
-- **[ ] H1. Zero-rows-affected not detected.** `finishWorkout` /
+- **[x] H1. Zero-rows-affected not detected.** `finishWorkout` /
   `discardWorkout` / `logSet` don't verify anything updated — a wrong id or
   an RLS-hidden row silently succeeds. Fix: `.select("id")` and assert
   returned array length.
@@ -38,10 +38,10 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
 - **[ ] H5. `exercise_category = 'cardio'` enum is dead weight.** PLAN.md says
   cardio lives in `cardio_sessions` not `exercises`; drop the `'cardio'` enum
   value before milestone 6 or someone accidentally seeds a cardio exercise row.
-- **[ ] H6. `/auth/test-login` guard weakness on Vercel previews.** `NODE_ENV`
+- **[x] H6. `/auth/test-login` guard weakness on Vercel previews.** `NODE_ENV`
   is `production` on previews. Add `VERCEL_ENV !== "production" &&
   VERCEL_ENV !== "preview"` guard before we deploy anywhere.
-- **[ ] H7. `Timer` effect tears down every render.** `since` is a freshly
+- **[x] H7. `Timer` effect tears down every render.** `since` is a freshly
   constructed `Date` on each parent render → unstable dep → interval
   constantly replaced. Accept `since: number` (ms-epoch) at the prop boundary
   or memoize the `Date` at each callsite.
@@ -51,12 +51,12 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
 
 ## Medium — maintainability / scalability
 
-- **[ ] M1. Format helpers duplicated 3×.** `formatVolume`, `formatWeight`,
+- **[x] M1. Format helpers duplicated 3×.** `formatVolume`, `formatWeight`,
   `formatDaysAgo`, `relativeDays` appear in `ActiveWorkout`, `FinishModal`,
   `page.tsx`. Move to `lib/format/{weight,volume,time}.ts`.
-- **[ ] M2. `formatVolume` boundary jump.** 999 → `"999"`, 1000 → `"1.0k"`.
+- **[x] M2. `formatVolume` boundary jump.** 999 → `"999"`, 1000 → `"1.0k"`.
   Pick a single rule (`< 1000 whole · < 10k one decimal · else whole + k`).
-- **[ ] M3. Typed env module.** Every `process.env.X!` is a runtime ambush
+- **[x] M3. Typed env module.** Every `process.env.X!` is a runtime ambush
   waiting to happen (we shipped a truncated anon key that only surfaced via
   auth failing in Playwright). Build `lib/env.ts` that validates shape at
   import time, nukes all `!` assertions.
@@ -64,11 +64,11 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
   take only a hand-picked subset. Hit this in `Modal` (had to wrap `Card` in
   a `div` for `onClick` stop-propagation). Fix: spread
   `...rest: React.ComponentPropsWithoutRef<element>`.
-- **[ ] M5. Tailwind class repetition.** Three load-bearing strings appear
+- **[x] M5. Tailwind class repetition.** Three load-bearing strings appear
   5+ times each: `border-[2.5px] border-ink rounded-[10px] shadow-brutal-sm`,
   `font-display tracking-display`, `text-[10px] font-black uppercase
   tracking-widest`. Add `@utility` definitions in `globals.css` (Tailwind v4).
-- **[ ] M6. `signOut` action missing `revalidatePath`.** Cached RSC data from
+- **[x] M6. `signOut` action missing `revalidatePath`.** Cached RSC data from
   previous user could persist for next visitor. Call
   `revalidatePath("/", "layout")` before redirect.
 - **[ ] M7. Last-session lookup same-day bug.** Query picks any finished
@@ -81,7 +81,7 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
 - **[ ] M9. Numeric columns parsed as strings.** TS types say `number`,
   runtime is `string`, we cast at boundaries. Drift will bite. Centralize
   parsing at query boundary or widen types.
-- **[ ] M10. DB errors leak to client.** `throw error` sends SQL messages
+- **[x] M10. DB errors leak to client.** `throw error` sends SQL messages
   through to Next.js error UI. Log server-side, throw generic.
 - **[ ] M11. `Modal` has no focus trap / initial focus.** Destructive
   "Discard" action is one tab-and-enter from accidental trigger.
@@ -98,7 +98,7 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
 
 - **[ ] L1. `pickerCopy.allFilter` exported but unused.** Either use it or
   delete.
-- **[ ] L2. `formatDaysAgo(0)` → `"0d"` but copy calls today `"—"` elsewhere.**
+- **[x] L2. `formatDaysAgo(0)` → `"0d"` but copy calls today `"—"` elsewhere.**
   Pick `"today"` for 0 and stop using em-dash for that case.
 - **[ ] L3. `proxy.ts` has no explicit `runtime`.** `export const runtime =
   "nodejs"` makes Node-only code paths unambiguous.
@@ -116,14 +116,17 @@ named-const styles, no hardcoded colors, no `any`, no `console.log`,
 
 ---
 
-## Standards to add to `~/.claude/rules/`
+## Standards added to `~/.claude/rules/` (2026-04-17)
 
-- **`supabase-actions.md`** (new) — every mutating server action
-  `getUser()` + explicit `user_id` filter + `.select()` row-count assertion;
-  never throw raw PostgREST errors.
-- **`env.md`** (new) — all env access through `lib/env.ts`; dev-only routes
-  guard on `VERCEL_ENV` not just `NODE_ENV`.
-- **`react-conventions.md`** (amend) — primitives spread `...rest`; `copy.ts`
-  contains ONLY `as const` strings; `useEffect` deps must be stable.
-- **`typescript.md`** (amend) — Tailwind `@utility` once a string repeats
-  3×; centralize DB-numeric parsing at boundary.
+- **`supabase-actions.md`** — every mutating server action `getUser()` +
+  explicit `user_id` filter + `.select()` row-count assertion; never throw
+  raw PostgREST errors; retry on `23505` for `max+1` inserts;
+  `revalidatePath` on auth-state changes.
+- **`env.md`** — all env access through `lib/env.ts`; dev-only routes guard
+  on both `NODE_ENV` and `VERCEL_ENV`; server-only keys never get
+  `NEXT_PUBLIC_` prefix.
+- **`react-conventions.md`** (amended) — primitives spread `...rest`;
+  `copy.ts` contains ONLY `as const` strings (helpers go to `lib/format/*`);
+  `useEffect` deps must be primitives or memoized.
+- **`typescript.md`** (amended) — Tailwind `@utility` once a string repeats
+  3×; centralize DB-numeric parsing at query boundary.
