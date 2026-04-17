@@ -4,9 +4,12 @@ import { Card } from "@/components/ui/Card";
 import { Timer } from "@/components/workout/Timer";
 import * as buttonStyles from "@/components/ui/Button/styles";
 import type { MuscleGroup } from "@/lib/db/types";
+import { formatWeight } from "@/lib/format/weight";
+import { formatVolume } from "@/lib/format/volume";
+import { relativeDays } from "@/lib/format/time";
 import { CurrentSetForm } from "./CurrentSetForm";
 import { FinishControls } from "./FinishControls";
-import { activeWorkoutCopy, relativeDays } from "./copy";
+import { activeWorkoutCopy } from "./copy";
 import * as styles from "./styles";
 
 const CURRENT_SET_FORM_ID = "current-set-form";
@@ -56,14 +59,6 @@ type ActiveWorkoutProps = {
   stats: { sets: number; exercises: number; volume: number };
 };
 
-const formatWeight = (weight: number): string =>
-  Number.isInteger(weight) ? String(weight) : weight.toString();
-
-const formatVolume = (volume: number): string => {
-  if (volume >= 1000) return `${(volume / 1000).toFixed(1)}k`;
-  return Math.round(volume).toString();
-};
-
 export const ActiveWorkout = ({
   workout,
   current,
@@ -72,7 +67,7 @@ export const ActiveWorkout = ({
   todayItems,
   stats,
 }: ActiveWorkoutProps): JSX.Element => {
-  const startedAt = new Date(workout.started_at);
+  const startedAtMs = new Date(workout.started_at).getTime();
   const nextSetNumber = (currentSets.at(-1)?.set_number ?? 0) + 1;
 
   const lastInWorkout = currentSets.at(-1);
@@ -98,11 +93,11 @@ export const ActiveWorkout = ({
         </Link>
         <div className={styles.timerPill}>
           <span className={styles.timerDot} />
-          <Timer since={startedAt} className={styles.timerText} />
+          <Timer since={startedAtMs} className={styles.timerText} />
         </div>
         <FinishControls
           workoutId={workout.id}
-          startedAt={workout.started_at}
+          startedAtMs={startedAtMs}
           setsCount={stats.sets}
           volume={stats.volume}
           buttonClassName={styles.finishBtn}

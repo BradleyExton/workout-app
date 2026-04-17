@@ -5,7 +5,7 @@ import { FinishModal } from "../FinishModal";
 
 type FinishControlsProps = {
   workoutId: string;
-  startedAt: string;
+  startedAtMs: number;
   setsCount: number;
   volume: number;
   buttonClassName: string;
@@ -14,7 +14,7 @@ type FinishControlsProps = {
 
 export const FinishControls = ({
   workoutId,
-  startedAt,
+  startedAtMs,
   setsCount,
   volume,
   buttonClassName,
@@ -35,7 +35,7 @@ export const FinishControls = ({
         open={open}
         onClose={() => setOpen(false)}
         workoutId={workoutId}
-        startedAt={new Date(startedAt)}
+        startedAtMs={startedAtMs}
         setsCount={setsCount}
         volume={volume}
       />

@@ -10,5 +10,4 @@ export const homeCopy = {
   statStreak: "Streak",
   musclesHeader: "Muscles",
   signOut: "Sign out",
-  neverTrained: "—",
 } as const;

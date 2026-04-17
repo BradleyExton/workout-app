@@ -4,6 +4,7 @@ import type { JSX } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Timer } from "@/components/workout/Timer";
 import * as buttonStyles from "@/components/ui/Button/styles";
+import { formatVolume } from "@/lib/format/volume";
 import { discardWorkout, finishWorkout } from "../../actions";
 import { finishModalCopy } from "./copy";
 import * as styles from "./styles";
@@ -12,21 +13,16 @@ type FinishModalProps = {
   open: boolean;
   onClose: () => void;
   workoutId: string;
-  startedAt: Date;
+  startedAtMs: number;
   setsCount: number;
   volume: number;
-};
-
-const formatVolume = (volume: number): string => {
-  if (volume >= 1000) return `${(volume / 1000).toFixed(1)}k`;
-  return Math.round(volume).toString();
 };
 
 export const FinishModal = ({
   open,
   onClose,
   workoutId,
-  startedAt,
+  startedAtMs,
   setsCount,
   volume,
 }: FinishModalProps): JSX.Element => (
@@ -49,7 +45,7 @@ export const FinishModal = ({
     <div className={styles.statsStrip}>
       <div className={styles.statCol}>
         <span className={styles.statLabel}>{finishModalCopy.statTime}</span>
-        <Timer since={startedAt} className={styles.statValue} />
+        <Timer since={startedAtMs} className={styles.statValue} />
       </div>
       <div className={styles.divider} />
       <div className={styles.statCol}>

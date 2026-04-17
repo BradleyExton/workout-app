@@ -7,6 +7,8 @@ import { Timer } from "@/components/workout/Timer";
 import { createClient } from "@/lib/supabase/server";
 import { deriveHomeMetrics } from "@/lib/domain/homeMetrics";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
+import { formatVolume } from "@/lib/format/volume";
+import { formatDaysAgo } from "@/lib/format/time";
 import { type MuscleGroup } from "@/lib/db/types";
 import * as buttonStyles from "@/components/ui/Button/styles";
 import { signOut } from "./actions";
@@ -24,17 +26,6 @@ const deriveName = (email: string | null | undefined): string => {
   const local = email.split("@")[0] ?? "";
   const first = local.split(/[._-]/)[0] ?? "";
   return first.toUpperCase() || "FRIEND";
-};
-
-const formatVolume = (volume: number): string => {
-  if (volume >= 1000) return `${(volume / 1000).toFixed(1)}k`;
-  return Math.round(volume).toString();
-};
-
-const formatDaysAgo = (days: number | null): string => {
-  if (days === null) return homeCopy.neverTrained;
-  if (days === 0) return "0d";
-  return `${days}d`;
 };
 
 const PIPS_PER_MUSCLE = 5;
@@ -197,7 +188,7 @@ export default async function HomePage(): Promise<JSX.Element> {
           >
             <span className={styles.resumeDot} />
             <span>{homeCopy.backToWorkoutPrefix}</span>
-            <Timer since={new Date(activeWorkout.started_at)} />
+            <Timer since={new Date(activeWorkout.started_at).getTime()} />
           </Link>
         ) : (
           <Link
