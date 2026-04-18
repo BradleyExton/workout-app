@@ -8,6 +8,7 @@ import { signOut } from "./actions";
 import { homeCopy } from "./copy";
 import { HomeCardioCard } from "./HomeCardioCard";
 import { HomeMetrics } from "./HomeMetrics";
+import { InstallPrompt } from "./InstallPrompt";
 import { ResumeCta } from "./ResumeCta";
 import * as styles from "./styles";
 
@@ -135,6 +136,8 @@ export default async function HomePage(): Promise<JSX.Element> {
         serverSessions={cardioSessions}
         nowMs={now.getTime()}
       />
+
+      <InstallPrompt />
 
       <form action={signOut} className={styles.signOutRow}>
         <button type="submit" className={styles.signOutBtn}>
