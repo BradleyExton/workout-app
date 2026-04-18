@@ -25,6 +25,7 @@ export type QueueItem<T = unknown> = {
   payload: T;
   created_at: string;
   attempts: number;
+  last_attempt_at: string | null;
 };
 
 export type CreateWorkoutPayload = {
@@ -77,6 +78,7 @@ export const enqueue = async <T>(
     synced_at: null,
     attempts: 0,
     last_error: null,
+    last_attempt_at: null,
   };
   await getDb().pending_ops.put(op);
   return id;
@@ -96,6 +98,7 @@ export const peekPending = async (limit = 20): Promise<QueueItem[]> => {
     payload: row.payload,
     created_at: row.created_at,
     attempts: row.attempts,
+    last_attempt_at: row.last_attempt_at,
   }));
 };
 
@@ -112,7 +115,36 @@ export const markFailed = async (id: string, error: string): Promise<void> => {
   await getDb().pending_ops.update(id, {
     attempts: row.attempts + 1,
     last_error: error,
+    last_attempt_at: new Date().toISOString(),
   });
+};
+
+const SYNCED_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Synced ops accumulate forever otherwise. Called from QueueSyncer on
+// mount to keep the table from growing unbounded.
+export const gcSyncedOps = async (now = Date.now()): Promise<number> => {
+  const cutoff = new Date(now - SYNCED_TTL_MS).toISOString();
+  const stale = await getDb()
+    .pending_ops.filter(
+      (op) => op.synced_at !== null && op.synced_at < cutoff,
+    )
+    .primaryKeys();
+  if (stale.length === 0) return 0;
+  await getDb().pending_ops.bulkDelete(stale);
+  return stale.length;
+};
+
+// Exponential backoff: 30s, 60s, 120s, 240s, capped at 600s.
+const BACKOFF_BASE_MS = 30_000;
+const BACKOFF_CAP_MS = 600_000;
+const backoffMs = (attempts: number): number =>
+  Math.min(BACKOFF_BASE_MS * 2 ** Math.max(0, attempts - 1), BACKOFF_CAP_MS);
+
+const inBackoff = (item: QueueItem, now: number): boolean => {
+  if (item.attempts === 0 || !item.last_attempt_at) return false;
+  const last = new Date(item.last_attempt_at).getTime();
+  return now - last < backoffMs(item.attempts);
 };
 
 const dispatchOp = async (item: QueueItem): Promise<void> => {
@@ -195,9 +227,17 @@ export const drainQueue = async (): Promise<{
   draining = true;
   try {
     const items = await peekPending(20);
+    const now = Date.now();
     let succeeded = 0;
+    let attempted = 0;
 
     for (const item of items) {
+      // Honour per-op backoff. The head op blocks the queue (FIFO,
+      // fail-fast) so if it's still cooling off, abandon this drain
+      // entirely — the next online/visibility event will re-check.
+      if (inBackoff(item, now)) break;
+
+      attempted++;
       try {
         await dispatchOp(item);
         await markSynced(item.id);
@@ -210,12 +250,12 @@ export const drainQueue = async (): Promise<{
         // Fail fast: if one op fails, pause drain. Likely the user is
         // offline or the server is returning errors; retrying the rest
         // immediately just burns battery. The next online/visibility
-        // event will re-trigger.
+        // event will re-trigger, subject to backoff.
         break;
       }
     }
 
-    return { attempted: items.length, succeeded };
+    return { attempted, succeeded };
   } finally {
     draining = false;
   }

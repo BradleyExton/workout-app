@@ -11,7 +11,7 @@
 // Renders nothing.
 
 import { useEffect, type JSX } from "react";
-import { drainQueue } from "@/lib/db/queue";
+import { drainQueue, gcSyncedOps } from "@/lib/db/queue";
 
 export const QueueSyncer = (): JSX.Element | null => {
   useEffect(() => {
@@ -19,6 +19,7 @@ export const QueueSyncer = (): JSX.Element | null => {
       void drainQueue();
     };
 
+    void gcSyncedOps();
     drain();
 
     const onOnline = (): void => drain();

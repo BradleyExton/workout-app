@@ -74,6 +74,7 @@ export type PendingOp = {
   synced_at: string | null;
   attempts: number;
   last_error: string | null;
+  last_attempt_at: string | null;
 };
 
 class WorkoutDB extends Dexie {
