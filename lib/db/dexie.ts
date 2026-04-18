@@ -16,6 +16,7 @@
 // IndexedDB during SSR and fail. Guard consumers with "use client".
 
 import Dexie, { type Table } from "dexie";
+import type { MuscleGroup } from "./types";
 
 export type WorkoutRow = {
   id: string;
@@ -26,11 +27,17 @@ export type WorkoutRow = {
   created_at: string;
 };
 
+// `exercise_name` and `exercise_primary_muscle` are denormalized from the
+// `exercises` table so the active-workout page can render Dexie-only rows
+// without a server round-trip. They are NOT sent to the server during
+// drain (queue.ts ignores them); the server joins to the canonical row.
 export type WorkoutExerciseRow = {
   id: string;
   workout_id: string;
   exercise_id: string;
   position: number;
+  exercise_name?: string;
+  exercise_primary_muscle?: MuscleGroup;
 };
 
 export type SetLocalRow = {

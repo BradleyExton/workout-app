@@ -32,6 +32,7 @@ type SetRow = {
   set_number: number;
   weight_kg: number;
   reps: number;
+  pending: boolean;
 };
 
 type LastSessionSet = {
@@ -139,10 +140,7 @@ export const ActiveWorkout = ({
           )}
 
           <div className={styles.setList}>
-            <SetList
-              workoutExerciseId={current.id}
-              serverSets={currentSets}
-            />
+            <SetList sets={currentSets} />
 
             <CurrentSetForm
               workoutExerciseId={current.id}

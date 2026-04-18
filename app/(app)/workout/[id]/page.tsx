@@ -1,7 +1,7 @@
 import type { JSX } from "react";
-import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ActiveWorkout } from "./ActiveWorkout";
+import type { MuscleGroup } from "@/lib/db/types";
+import { Hydrator, type ServerSnapshot } from "./ActiveWorkout/Hydrator";
 
 type Params = { id: string };
 
@@ -19,19 +19,41 @@ export default async function ActiveWorkoutPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (!workout) notFound();
-  if (workout.finished_at) redirect("/");
+  if (!workout) {
+    const empty: ServerSnapshot = {
+      workout: null,
+      workoutExercises: [],
+      sets: [],
+      lastSession: null,
+    };
+    return <Hydrator workoutId={id} server={empty} />;
+  }
 
   const { data: workoutExercises } = await supabase
     .from("workout_exercises")
-    .select("id, position, exercise:exercises(id, name, primary_muscle)")
+    .select("id, position, exercise_id, exercise:exercises(id, name, primary_muscle)")
     .eq("workout_id", id)
     .order("position", { ascending: true });
 
-  const exercisesList = workoutExercises ?? [];
+  type RawWE = {
+    id: string;
+    position: number;
+    exercise_id: string;
+    exercise:
+      | { id: string; name: string; primary_muscle: MuscleGroup }
+      | { id: string; name: string; primary_muscle: MuscleGroup }[]
+      | null;
+  };
+
+  const exercisesList = ((workoutExercises ?? []) as RawWE[]).map((we) => ({
+    id: we.id,
+    position: we.position,
+    exercise_id: we.exercise_id,
+    exercise: Array.isArray(we.exercise) ? (we.exercise[0] ?? null) : we.exercise,
+  }));
   const current = exercisesList.at(-1) ?? null;
 
-  const { data: allSets } = exercisesList.length
+  const { data: rawSets } = exercisesList.length
     ? await supabase
         .from("sets")
         .select("id, set_number, weight_kg, reps, workout_exercise_id")
@@ -42,29 +64,15 @@ export default async function ActiveWorkoutPage({
         .order("set_number", { ascending: true })
     : { data: null };
 
-  const setsByExercise = new Map<
-    string,
-    { id: string; set_number: number; weight_kg: number; reps: number }[]
-  >();
-  for (const set of allSets ?? []) {
-    const arr = setsByExercise.get(set.workout_exercise_id) ?? [];
-    arr.push({
-      id: set.id,
-      set_number: set.set_number,
-      weight_kg: Number(set.weight_kg),
-      reps: set.reps,
-    });
-    setsByExercise.set(set.workout_exercise_id, arr);
-  }
+  const sets = (rawSets ?? []).map((s) => ({
+    id: s.id,
+    workout_exercise_id: s.workout_exercise_id,
+    set_number: s.set_number,
+    weight_kg: Number(s.weight_kg),
+    reps: s.reps,
+  }));
 
-  const currentSets = current ? (setsByExercise.get(current.id) ?? []) : [];
-
-  type LastSessionSet = {
-    set_number: number;
-    weight_kg: number;
-    reps: number;
-  };
-  let lastSession: { finishedAt: string; sets: LastSessionSet[] } | null = null;
+  let lastSession: ServerSnapshot["lastSession"] = null;
 
   if (current?.exercise) {
     const { data: lastWeRow } = await supabase
@@ -92,6 +100,7 @@ export default async function ActiveWorkoutPage({
 
       if (finishedAt && lastSets) {
         lastSession = {
+          exerciseId: current.exercise.id,
           finishedAt,
           sets: lastSets.map((s) => ({
             set_number: s.set_number,
@@ -103,36 +112,16 @@ export default async function ActiveWorkoutPage({
     }
   }
 
-  const todayItems = exercisesList
-    .filter((we) => we.id !== current?.id && we.exercise !== null)
-    .map((we) => {
-      const sets = setsByExercise.get(we.id) ?? [];
-      return {
-        id: we.id,
-        name: we.exercise?.name ?? "",
-        setCount: sets.length,
-        lastWeight: sets.at(-1)?.weight_kg ?? null,
-      };
-    });
+  const snapshot: ServerSnapshot = {
+    workout: {
+      id: workout.id,
+      started_at: workout.started_at,
+      finished_at: workout.finished_at,
+    },
+    workoutExercises: exercisesList,
+    sets,
+    lastSession,
+  };
 
-  const totalSets = (allSets ?? []).length;
-  const totalVolume = (allSets ?? []).reduce(
-    (sum, s) => sum + Number(s.weight_kg) * s.reps,
-    0,
-  );
-
-  return (
-    <ActiveWorkout
-      workout={workout}
-      current={current}
-      currentSets={currentSets}
-      lastSession={lastSession}
-      todayItems={todayItems}
-      stats={{
-        sets: totalSets,
-        exercises: exercisesList.length,
-        volume: totalVolume,
-      }}
-    />
-  );
+  return <Hydrator workoutId={id} server={snapshot} />;
 }

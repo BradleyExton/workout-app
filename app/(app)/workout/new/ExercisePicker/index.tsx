@@ -67,6 +67,8 @@ export const ExercisePicker = ({
   const filters: Filter[] = ["All", ...MUSCLE_GROUPS];
 
   const onPick = (exerciseId: string): void => {
+    const exercise = exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
     startTransition(async () => {
       const nowIso = new Date().toISOString();
       const db = getDb();
@@ -89,7 +91,9 @@ export const ExercisePicker = ({
         } satisfies CreateWorkoutPayload);
       }
 
-      // 2. Append the exercise.
+      // 2. Append the exercise. exercise_name + exercise_primary_muscle
+      // are denormalized so the active-workout page can render this row
+      // even when the server hasn't received the addExercise op yet.
       const weId = newId();
       const nextPosition = (await maxPositionInWorkout(workoutId)) + 1;
       await db.workout_exercises.put({
@@ -97,6 +101,8 @@ export const ExercisePicker = ({
         workout_id: workoutId,
         exercise_id: exerciseId,
         position: nextPosition,
+        exercise_name: exercise.name,
+        exercise_primary_muscle: exercise.primary_muscle,
       });
       await enqueue("addExercise", {
         id: weId,
@@ -105,12 +111,10 @@ export const ExercisePicker = ({
         position: nextPosition,
       } satisfies AddExercisePayload);
 
-      // 3. Drain before navigating so the workout row exists server-side
-      // when /workout/[id] renders. Without this the page would 404 while
-      // the createWorkout op was still in flight. True offline picker
-      // (page hydrates from Dexie when server has nothing yet) lands
-      // with 7d.
-      await drainQueue();
+      // Best-effort drain in the background. The /workout/[id] page now
+      // hydrates from Dexie (phase 7d), so we don't need to wait for the
+      // server before navigating.
+      void drainQueue();
       router.push(`/workout/${workoutId}`);
     });
   };
