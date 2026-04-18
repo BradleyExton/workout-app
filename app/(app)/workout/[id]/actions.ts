@@ -19,32 +19,43 @@ const requireUserId = async (): Promise<{
   return { supabase, userId: user.id };
 };
 
-export const logSet = async (formData: FormData): Promise<void> => {
-  // 7c: client generates `id` + `set_number` so the Dexie row and the
-  // Supabase row share an id. Upsert on id is idempotent against
-  // queue-drain retries. A (workout_exercise_id, set_number) conflict
-  // surfaces as 23505 and fails the op — resolved in phase 7e.
+export type LogSetResult = {
+  id: string;
+  set_number: number;
+};
+
+export const logSet = async (formData: FormData): Promise<LogSetResult> => {
+  // Client generates `id` + `set_number`. Upsert on id is idempotent
+  // against queue-drain retries. A (workout_exercise_id, set_number)
+  // conflict (23505) means another op already claimed that slot — most
+  // commonly because the queue is replaying after a sync where the
+  // server picked up a concurrent write. We re-read max(set_number)+1
+  // and retry once; the dispatcher patches the Dexie row to the
+  // resolved set_number.
   const id = formData.get("id");
   const workoutExerciseId = formData.get("workoutExerciseId");
   const setNumberStr = formData.get("set_number");
   const weightStr = formData.get("weight_kg");
   const repsStr = formData.get("reps");
 
-  if (typeof id !== "string") return;
-  if (typeof workoutExerciseId !== "string") return;
-  if (typeof setNumberStr !== "string") return;
-  if (typeof weightStr !== "string" || typeof repsStr !== "string") return;
+  if (typeof id !== "string") throw new Error("Invalid id");
+  if (typeof workoutExerciseId !== "string")
+    throw new Error("Invalid workoutExerciseId");
+  if (typeof setNumberStr !== "string") throw new Error("Invalid set_number");
+  if (typeof weightStr !== "string" || typeof repsStr !== "string")
+    throw new Error("Invalid weight or reps");
 
-  const set_number = Number(setNumberStr);
+  const setNumber = Number(setNumberStr);
   const weight_kg = Number(weightStr);
   const reps = Number(repsStr);
-  if (!Number.isInteger(set_number) || set_number <= 0) return;
-  if (!Number.isFinite(weight_kg) || weight_kg < 0) return;
-  if (!Number.isInteger(reps) || reps < 0) return;
+  if (!Number.isInteger(setNumber) || setNumber <= 0)
+    throw new Error("Invalid set_number");
+  if (!Number.isFinite(weight_kg) || weight_kg < 0)
+    throw new Error("Invalid weight");
+  if (!Number.isInteger(reps) || reps < 0) throw new Error("Invalid reps");
 
   const { supabase, userId } = await requireUserId();
 
-  // Verify ownership by walking workout_exercise -> workout.user_id.
   const { data: ownerCheck } = await supabase
     .from("workout_exercises")
     .select("workout_id, workouts!inner(user_id)")
@@ -59,16 +70,36 @@ export const logSet = async (formData: FormData): Promise<void> => {
   }
   const workoutId = ownerCheck.workout_id;
 
-  const { data, error } = await supabase
-    .from("sets")
-    .upsert({
-      id,
-      workout_exercise_id: workoutExerciseId,
-      set_number,
-      weight_kg,
-      reps,
-    })
-    .select("id");
+  const tryUpsert = async (sn: number) =>
+    supabase
+      .from("sets")
+      .upsert({
+        id,
+        workout_exercise_id: workoutExerciseId,
+        set_number: sn,
+        weight_kg,
+        reps,
+      })
+      .select("id, set_number");
+
+  let { data, error } = await tryUpsert(setNumber);
+  let resolvedSetNumber = setNumber;
+
+  if (error?.code === "23505") {
+    const { data: maxRow } = await supabase
+      .from("sets")
+      .select("set_number")
+      .eq("workout_exercise_id", workoutExerciseId)
+      .order("set_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const bumped = (maxRow?.set_number ?? 0) + 1;
+    const retry = await tryUpsert(bumped);
+    data = retry.data;
+    error = retry.error;
+    resolvedSetNumber = bumped;
+  }
+
   if (error) {
     console.error("[logSet] upsert set failed", error);
     throw new Error("Could not log set");
@@ -79,6 +110,8 @@ export const logSet = async (formData: FormData): Promise<void> => {
   }
 
   revalidatePath(`/workout/${workoutId}`);
+
+  return { id, set_number: data[0].set_number ?? resolvedSetNumber };
 };
 
 export const finishWorkout = async (formData: FormData): Promise<void> => {

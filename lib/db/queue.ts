@@ -143,7 +143,12 @@ const dispatchOp = async (item: QueueItem): Promise<void> => {
       fd.append("set_number", String(p.set_number));
       fd.append("weight_kg", String(p.weight_kg));
       fd.append("reps", String(p.reps));
-      await logSetAction(fd);
+      const result = await logSetAction(fd);
+      if (result.set_number !== p.set_number) {
+        // Server resolved a (workout_exercise_id, set_number) collision
+        // by bumping. Patch the Dexie row so the merge stays consistent.
+        await getDb().sets.update(p.id, { set_number: result.set_number });
+      }
       return;
     }
     case "finishWorkout": {
