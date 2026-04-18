@@ -1,77 +1,90 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/db/types";
 
-const findActiveWorkout = async (
-  supabase: SupabaseClient<Database>,
-  userId: string,
-): Promise<{ id: string } | null> => {
-  const { data } = await supabase
-    .from("workouts")
-    .select("id")
-    .eq("user_id", userId)
-    .is("finished_at", null)
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data;
-};
-
-export const addExerciseToWorkout = async (formData: FormData): Promise<void> => {
-  const exerciseId = formData.get("exerciseId");
-  if (typeof exerciseId !== "string") return;
-
+const requireUserId = async (): Promise<{
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+}> => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  return { supabase, userId: user.id };
+};
 
-  let workoutId = (await findActiveWorkout(supabase, user.id))?.id;
+// 7c-extended: client-generated id + explicit started_at so Dexie and
+// Supabase agree on workout identity. Partial unique index on
+// workouts(user_id) where finished_at is null will reject a duplicate
+// active workout with 23505 — caller's drain handles that as failure.
+export const createWorkout = async (formData: FormData): Promise<void> => {
+  const id = formData.get("id");
+  const startedAt = formData.get("started_at");
 
-  if (!workoutId) {
-    const { data: created, error } = await supabase
-      .from("workouts")
-      .insert({ user_id: user.id, started_at: new Date().toISOString() })
-      .select("id")
-      .single();
+  if (typeof id !== "string") return;
+  if (typeof startedAt !== "string") return;
 
-    if (error?.code === "23505") {
-      // Partial unique index fired: another tab or tap already inserted one.
-      // Re-fetch and continue.
-      workoutId = (await findActiveWorkout(supabase, user.id))?.id;
-    } else if (error || !created) {
-      console.error("[addExerciseToWorkout] insert workout failed", error);
-      throw new Error("Could not start workout");
-    } else {
-      workoutId = created.id;
-    }
+  const { supabase, userId } = await requireUserId();
+
+  const { data, error } = await supabase
+    .from("workouts")
+    .upsert({ id, user_id: userId, started_at: startedAt })
+    .select("id");
+  if (error) {
+    console.error("[createWorkout] upsert failed", error);
+    throw new Error("Could not create workout");
   }
-
-  if (!workoutId) {
-    throw new Error("Could not start workout");
+  if (!data || data.length === 0) {
+    console.error("[createWorkout] no rows affected", { id, userId });
+    throw new Error("Could not create workout");
   }
+};
 
-  const { data: lastPos } = await supabase
-    .from("workout_exercises")
-    .select("position")
-    .eq("workout_id", workoutId)
-    .order("position", { ascending: false })
-    .limit(1)
+// 7c-extended: client computes position from Dexie (server sets can lag
+// offline). Upsert on id for drain idempotency; a (workout_id, position)
+// conflict surfaces as 23505 and fails the op — resolved in 7e.
+export const addExercise = async (formData: FormData): Promise<void> => {
+  const id = formData.get("id");
+  const workoutId = formData.get("workoutId");
+  const exerciseId = formData.get("exerciseId");
+  const positionStr = formData.get("position");
+
+  if (typeof id !== "string") return;
+  if (typeof workoutId !== "string") return;
+  if (typeof exerciseId !== "string") return;
+  if (typeof positionStr !== "string") return;
+
+  const position = Number(positionStr);
+  if (!Number.isInteger(position) || position < 1) return;
+
+  const { supabase, userId } = await requireUserId();
+
+  // Verify workout ownership.
+  const { data: workoutCheck } = await supabase
+    .from("workouts")
+    .select("id, user_id")
+    .eq("id", workoutId)
     .maybeSingle();
+  if (!workoutCheck || workoutCheck.user_id !== userId) {
+    console.error("[addExercise] ownership check failed", { workoutId, userId });
+    throw new Error("Not allowed");
+  }
 
-  const position = (lastPos?.position ?? 0) + 1;
-
-  const { error: insertError } = await supabase
+  const { data, error } = await supabase
     .from("workout_exercises")
-    .insert({ workout_id: workoutId, exercise_id: exerciseId, position });
-  if (insertError) {
-    console.error("[addExerciseToWorkout] insert workout_exercise failed", insertError);
+    .upsert({ id, workout_id: workoutId, exercise_id: exerciseId, position })
+    .select("id");
+  if (error) {
+    console.error("[addExercise] upsert failed", error);
+    throw new Error("Could not add exercise");
+  }
+  if (!data || data.length === 0) {
+    console.error("[addExercise] no rows affected", { id });
     throw new Error("Could not add exercise");
   }
 
-  redirect(`/workout/${workoutId}`);
+  revalidatePath(`/workout/${workoutId}`);
 };

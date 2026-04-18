@@ -1,9 +1,17 @@
 "use client";
 
-import { useMemo, useState, type JSX } from "react";
+import { useMemo, useState, useTransition, type JSX } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getDb } from "@/lib/db/dexie";
+import { newId } from "@/lib/db/ids";
+import {
+  drainQueue,
+  enqueue,
+  type AddExercisePayload,
+  type CreateWorkoutPayload,
+} from "@/lib/db/queue";
 import { MUSCLE_GROUPS, type MuscleGroup } from "@/lib/db/types";
-import { addExerciseToWorkout } from "../actions";
 import { pickerCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -19,11 +27,31 @@ type ExercisePickerProps = {
   exercises: PickerExercise[];
 };
 
+// Finds the active workout in Dexie for this user. Dexie is the
+// source of truth for ongoing workouts once 7c-extended is live —
+// hydration from server for edge cases lands in 7d.
+const findActiveWorkoutId = async (): Promise<string | null> => {
+  const row = await getDb()
+    .workouts.filter((w) => w.finished_at === null)
+    .first();
+  return row?.id ?? null;
+};
+
+const maxPositionInWorkout = async (workoutId: string): Promise<number> => {
+  const rows = await getDb()
+    .workout_exercises.where("workout_id")
+    .equals(workoutId)
+    .toArray();
+  return rows.reduce((max, r) => Math.max(max, r.position), 0);
+};
+
 export const ExercisePicker = ({
   exercises,
 }: ExercisePickerProps): JSX.Element => {
   const [filter, setFilter] = useState<Filter>("All");
   const [query, setQuery] = useState("");
+  const [, startTransition] = useTransition();
+  const router = useRouter();
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -37,6 +65,55 @@ export const ExercisePicker = ({
   }, [exercises, filter, query]);
 
   const filters: Filter[] = ["All", ...MUSCLE_GROUPS];
+
+  const onPick = (exerciseId: string): void => {
+    startTransition(async () => {
+      const nowIso = new Date().toISOString();
+      const db = getDb();
+
+      // 1. Find or create the active workout.
+      let workoutId = await findActiveWorkoutId();
+      if (!workoutId) {
+        workoutId = newId();
+        await db.workouts.put({
+          id: workoutId,
+          user_id: "", // filled server-side; Dexie copy doesn't need it
+          started_at: nowIso,
+          finished_at: null,
+          notes: null,
+          created_at: nowIso,
+        });
+        await enqueue("createWorkout", {
+          id: workoutId,
+          started_at: nowIso,
+        } satisfies CreateWorkoutPayload);
+      }
+
+      // 2. Append the exercise.
+      const weId = newId();
+      const nextPosition = (await maxPositionInWorkout(workoutId)) + 1;
+      await db.workout_exercises.put({
+        id: weId,
+        workout_id: workoutId,
+        exercise_id: exerciseId,
+        position: nextPosition,
+      });
+      await enqueue("addExercise", {
+        id: weId,
+        workout_id: workoutId,
+        exercise_id: exerciseId,
+        position: nextPosition,
+      } satisfies AddExercisePayload);
+
+      // 3. Drain before navigating so the workout row exists server-side
+      // when /workout/[id] renders. Without this the page would 404 while
+      // the createWorkout op was still in flight. True offline picker
+      // (page hydrates from Dexie when server has nothing yet) lands
+      // with 7d.
+      await drainQueue();
+      router.push(`/workout/${workoutId}`);
+    });
+  };
 
   return (
     <main className={styles.page}>
@@ -74,13 +151,15 @@ export const ExercisePicker = ({
       ) : (
         <div className={styles.list}>
           {visible.map((exercise) => (
-            <form key={exercise.id} action={addExerciseToWorkout}>
-              <input type="hidden" name="exerciseId" value={exercise.id} />
-              <button type="submit" className={styles.rowButton}>
-                <span className={styles.rowName}>{exercise.name}</span>
-                <span className={styles.rowBadge}>{exercise.primary_muscle}</span>
-              </button>
-            </form>
+            <button
+              key={exercise.id}
+              type="button"
+              onClick={() => onPick(exercise.id)}
+              className={styles.rowButton}
+            >
+              <span className={styles.rowName}>{exercise.name}</span>
+              <span className={styles.rowBadge}>{exercise.primary_muscle}</span>
+            </button>
           ))}
         </div>
       )}

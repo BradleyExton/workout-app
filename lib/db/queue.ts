@@ -1,17 +1,21 @@
 // Write-queue primitives + drain path.
 //
-// Enqueue: producers (phase 7c+) call enqueue() after mirror-writing to
-// Dexie so the UI can reflect the change before the server round-trip.
-//
-// Drain: runs client-side (Next.js server actions imported here get
-// transparently POSTed to the server when called from client code).
-// Triggered by QueueSyncer on mount + online events. Each op dispatches to
-// its corresponding server action; on success the row is marked synced,
-// on failure attempts is bumped and last_error is recorded.
-//
-// Currently dispatches: logSet. Others added as producers come online.
+// Producers (CurrentSetForm, picker, finish controls, cardio form)
+// mirror-write to Dexie and then enqueue. Drain (QueueSyncer + explicit
+// best-effort after each write) dispatches to the matching server action
+// via client-side import. Upsert-on-id on the server side makes retries
+// idempotent.
 
-import { logSet as logSetAction } from "@/app/(app)/workout/[id]/actions";
+import {
+  createWorkout as createWorkoutAction,
+  addExercise as addExerciseAction,
+} from "@/app/(app)/workout/new/actions";
+import {
+  logSet as logSetAction,
+  finishWorkout as finishWorkoutAction,
+  discardWorkout as discardWorkoutAction,
+} from "@/app/(app)/workout/[id]/actions";
+import { logCardio as logCardioAction } from "@/app/(app)/cardio/new/actions";
 import { getDb, type PendingOp, type PendingOpType } from "./dexie";
 import { newId } from "./ids";
 
@@ -23,12 +27,41 @@ export type QueueItem<T = unknown> = {
   attempts: number;
 };
 
+export type CreateWorkoutPayload = {
+  id: string;
+  started_at: string;
+};
+
+export type AddExercisePayload = {
+  id: string;
+  workout_id: string;
+  exercise_id: string;
+  position: number;
+};
+
 export type LogSetPayload = {
   id: string;
   workoutExerciseId: string;
   set_number: number;
   weight_kg: number;
   reps: number;
+};
+
+export type FinishWorkoutPayload = {
+  workout_id: string;
+  finished_at: string;
+};
+
+export type DiscardWorkoutPayload = {
+  workout_id: string;
+};
+
+export type LogCardioPayload = {
+  id: string;
+  modality: "walk" | "run" | "treadmill";
+  started_at: string;
+  duration_sec: number;
+  distance_m: number | null;
 };
 
 export const enqueue = async <T>(
@@ -84,6 +117,24 @@ export const markFailed = async (id: string, error: string): Promise<void> => {
 
 const dispatchOp = async (item: QueueItem): Promise<void> => {
   switch (item.type) {
+    case "createWorkout": {
+      const p = item.payload as CreateWorkoutPayload;
+      const fd = new FormData();
+      fd.append("id", p.id);
+      fd.append("started_at", p.started_at);
+      await createWorkoutAction(fd);
+      return;
+    }
+    case "addExercise": {
+      const p = item.payload as AddExercisePayload;
+      const fd = new FormData();
+      fd.append("id", p.id);
+      fd.append("workoutId", p.workout_id);
+      fd.append("exerciseId", p.exercise_id);
+      fd.append("position", String(p.position));
+      await addExerciseAction(fd);
+      return;
+    }
     case "logSet": {
       const p = item.payload as LogSetPayload;
       const fd = new FormData();
@@ -95,10 +146,34 @@ const dispatchOp = async (item: QueueItem): Promise<void> => {
       await logSetAction(fd);
       return;
     }
+    case "finishWorkout": {
+      const p = item.payload as FinishWorkoutPayload;
+      const fd = new FormData();
+      fd.append("workoutId", p.workout_id);
+      fd.append("finished_at", p.finished_at);
+      await finishWorkoutAction(fd);
+      return;
+    }
+    case "discardWorkout": {
+      const p = item.payload as DiscardWorkoutPayload;
+      const fd = new FormData();
+      fd.append("workoutId", p.workout_id);
+      await discardWorkoutAction(fd);
+      return;
+    }
+    case "logCardio": {
+      const p = item.payload as LogCardioPayload;
+      const fd = new FormData();
+      fd.append("id", p.id);
+      fd.append("modality", p.modality);
+      fd.append("started_at", p.started_at);
+      fd.append("duration_sec", String(p.duration_sec));
+      if (p.distance_m !== null) fd.append("distance_m", String(p.distance_m));
+      await logCardioAction(fd);
+      return;
+    }
     default:
-      // 7c wires up addExercise / finishWorkout / discardWorkout / logCardio.
-      // Unknown op: leave in queue for a future version to handle.
-      throw new Error(`Unsupported op type: ${item.type}`);
+      throw new Error(`Unsupported op type: ${item.type satisfies never}`);
   }
 };
 

@@ -83,13 +83,22 @@ export const logSet = async (formData: FormData): Promise<void> => {
 
 export const finishWorkout = async (formData: FormData): Promise<void> => {
   const workoutId = formData.get("workoutId");
+  const finishedAt = formData.get("finished_at");
   if (typeof workoutId !== "string") return;
+  // Client-provided finished_at so Dexie and Supabase agree on the
+  // completion time even if the drain fires minutes after the user tapped
+  // Finish. Falls back to server now() if the client didn't provide one
+  // (e.g., legacy call path).
+  const timestamp =
+    typeof finishedAt === "string" && finishedAt !== ""
+      ? finishedAt
+      : new Date().toISOString();
 
   const { supabase, userId } = await requireUserId();
 
   const { data, error } = await supabase
     .from("workouts")
-    .update({ finished_at: new Date().toISOString() })
+    .update({ finished_at: timestamp })
     .eq("id", workoutId)
     .eq("user_id", userId)
     .select("id");
@@ -103,7 +112,6 @@ export const finishWorkout = async (formData: FormData): Promise<void> => {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
 };
 
 export const discardWorkout = async (formData: FormData): Promise<void> => {
@@ -112,7 +120,10 @@ export const discardWorkout = async (formData: FormData): Promise<void> => {
 
   const { supabase, userId } = await requireUserId();
 
-  const { data, error } = await supabase
+  // Idempotent: if the row is already gone (e.g., drain retried after
+  // success), we don't want to throw. .select() returns [] and we treat
+  // that as success rather than failure.
+  const { error } = await supabase
     .from("workouts")
     .delete()
     .eq("id", workoutId)
@@ -122,11 +133,6 @@ export const discardWorkout = async (formData: FormData): Promise<void> => {
     console.error("[discardWorkout] delete failed", error);
     throw new Error("Could not discard workout");
   }
-  if (!data || data.length === 0) {
-    console.error("[discardWorkout] no rows affected", { workoutId, userId });
-    throw new Error("Workout not found");
-  }
 
   revalidatePath("/", "layout");
-  redirect("/");
 };
