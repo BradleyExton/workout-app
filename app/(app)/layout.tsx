@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { QueueSyncer } from "@/components/system/QueueSyncer";
+import { SwRegister } from "@/components/system/SwRegister";
 
 export default async function AppLayout({
   children,
@@ -18,6 +19,7 @@ export default async function AppLayout({
   return (
     <>
       <QueueSyncer />
+      <SwRegister />
       {children}
     </>
   );
