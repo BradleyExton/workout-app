@@ -93,7 +93,7 @@ Roughly 1-2 evenings each for a stack-familiar dev.
    - 7b. Convert `logSet` to optimistic-first with queue drain. *(next)*
    - 7c. Same pattern for `addExercise`, `finishWorkout`, `discardWorkout`, `logCardio`.
    - 7d. Read path: active workout (and home cardio + resume CTA) hydrate from Dexie, reconcile with Supabase on load. *(done)*
-   - 7e. Edge cases: conflicts, stale data, reconnect behavior.
+   - 7e. Edge cases: logSet 23505 retry, queue GC + per-op backoff, home metrics Dexie-merge. *(done)*
 8. **PWA polish** — manifest, install prompt, service worker, offline fallback page.
 9. **Achievements + PRs** — pure functions run after each workout save. Easy to unit test.
 10. **Polish pass** — empty states, error states, transitions, install prompt copy.
