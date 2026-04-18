@@ -1,7 +1,17 @@
-// Write-queue skeleton for the offline flow. Behavior (actual Supabase
-// dispatch) lands in phase 7b. For now we expose the enqueue + peek + mark
-// primitives and a no-op drain so the shape is stable.
+// Write-queue primitives + drain path.
+//
+// Enqueue: producers (phase 7c+) call enqueue() after mirror-writing to
+// Dexie so the UI can reflect the change before the server round-trip.
+//
+// Drain: runs client-side (Next.js server actions imported here get
+// transparently POSTed to the server when called from client code).
+// Triggered by QueueSyncer on mount + online events. Each op dispatches to
+// its corresponding server action; on success the row is marked synced,
+// on failure attempts is bumped and last_error is recorded.
+//
+// Currently dispatches: logSet. Others added as producers come online.
 
+import { logSet as logSetAction } from "@/app/(app)/workout/[id]/actions";
 import { getDb, type PendingOp, type PendingOpType } from "./dexie";
 import { newId } from "./ids";
 
@@ -11,6 +21,12 @@ export type QueueItem<T = unknown> = {
   payload: T;
   created_at: string;
   attempts: number;
+};
+
+export type LogSetPayload = {
+  workoutExerciseId: string;
+  weight_kg: number;
+  reps: number;
 };
 
 export const enqueue = async <T>(
@@ -64,12 +80,59 @@ export const markFailed = async (id: string, error: string): Promise<void> => {
   });
 };
 
-// Placeholder — phase 7b wires this up to actually dispatch ops to the
-// Supabase server actions. For now it's a no-op so consumers can call it
-// without breaking.
+const dispatchOp = async (item: QueueItem): Promise<void> => {
+  switch (item.type) {
+    case "logSet": {
+      const p = item.payload as LogSetPayload;
+      const fd = new FormData();
+      fd.append("workoutExerciseId", p.workoutExerciseId);
+      fd.append("weight_kg", String(p.weight_kg));
+      fd.append("reps", String(p.reps));
+      await logSetAction(fd);
+      return;
+    }
+    default:
+      // 7c wires up addExercise / finishWorkout / discardWorkout / logCardio.
+      // Unknown op: leave in queue for a future version to handle.
+      throw new Error(`Unsupported op type: ${item.type}`);
+  }
+};
+
+// Re-entrancy guard: drainQueue may be triggered from multiple event
+// sources (mount, online, visibility) near-simultaneously. We only want
+// one drain in flight at a time.
+let draining = false;
+
 export const drainQueue = async (): Promise<{
   attempted: number;
   succeeded: number;
 }> => {
-  return { attempted: 0, succeeded: 0 };
+  if (draining) return { attempted: 0, succeeded: 0 };
+  draining = true;
+  try {
+    const items = await peekPending(20);
+    let succeeded = 0;
+
+    for (const item of items) {
+      try {
+        await dispatchOp(item);
+        await markSynced(item.id);
+        succeeded++;
+      } catch (err) {
+        await markFailed(
+          item.id,
+          err instanceof Error ? err.message : String(err),
+        );
+        // Fail fast: if one op fails, pause drain. Likely the user is
+        // offline or the server is returning errors; retrying the rest
+        // immediately just burns battery. The next online/visibility
+        // event will re-trigger.
+        break;
+      }
+    }
+
+    return { attempted: items.length, succeeded };
+  } finally {
+    draining = false;
+  }
 };

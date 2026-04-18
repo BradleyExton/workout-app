@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { QueueSyncer } from "@/components/system/QueueSyncer";
 
 export default async function AppLayout({
   children,
@@ -14,5 +15,10 @@ export default async function AppLayout({
 
   if (!user) redirect("/login");
 
-  return <>{children}</>;
+  return (
+    <>
+      <QueueSyncer />
+      {children}
+    </>
+  );
 }
