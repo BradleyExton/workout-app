@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type JSX } from "react";
+import { useState, type FormEvent, type JSX } from "react";
 import { Card } from "@/components/ui/Card";
-import { logSet } from "../../actions";
+import { getDb } from "@/lib/db/dexie";
+import { newId } from "@/lib/db/ids";
+import { drainQueue, enqueue, type LogSetPayload } from "@/lib/db/queue";
 import { currentSetCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -10,31 +12,65 @@ type Defaults = { weight_kg: string; reps: string };
 
 type CurrentSetFormProps = {
   workoutExerciseId: string;
-  setNumber: number;
+  initialSetNumber: number;
   defaults: Defaults;
   formId: string;
 };
 
 export const CurrentSetForm = ({
   workoutExerciseId,
-  setNumber,
+  initialSetNumber,
   defaults,
   formId,
 }: CurrentSetFormProps): JSX.Element => {
   const [weight, setWeight] = useState(defaults.weight_kg);
   const [reps, setReps] = useState(defaults.reps);
+  const [nextSetNumber, setNextSetNumber] = useState(initialSetNumber);
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+
+    const weightValue = Number(weight);
+    const repsValue = Number(reps);
+    if (!Number.isFinite(weightValue) || weightValue < 0) return;
+    if (!Number.isInteger(repsValue) || repsValue < 0) return;
+
+    const id = newId();
+    const set_number = nextSetNumber;
+    const completed_at = new Date().toISOString();
+
+    // Write to Dexie first — SetList's useLiveQuery picks this up and
+    // renders the new row before the server round-trip completes.
+    await getDb().sets.add({
+      id,
+      workout_exercise_id: workoutExerciseId,
+      set_number,
+      weight_kg: weightValue,
+      reps: repsValue,
+      completed_at,
+    });
+
+    const payload: LogSetPayload = {
+      id,
+      workoutExerciseId,
+      set_number,
+      weight_kg: weightValue,
+      reps: repsValue,
+    };
+    await enqueue("logSet", payload);
+
+    // Best-effort immediate drain. If offline, markFailed fires but the
+    // row stays pending — next online/visibility event retries.
+    void drainQueue();
+
+    setNextSetNumber((n) => n + 1);
+  };
 
   return (
     <Card variant="lime" className={styles.card}>
-      <form id={formId} action={logSet}>
-        <input
-          type="hidden"
-          name="workoutExerciseId"
-          value={workoutExerciseId}
-        />
-
+      <form id={formId} onSubmit={onSubmit}>
         <div className={styles.header}>
-          <span className={styles.setNumber}>{setNumber}</span>
+          <span className={styles.setNumber}>{nextSetNumber}</span>
           <span className={styles.label}>{currentSetCopy.currentSetLabel}</span>
         </div>
 

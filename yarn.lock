@@ -1332,6 +1332,11 @@ detect-libc@^2.0.3, detect-libc@^2.1.2:
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-2.1.2.tgz#689c5dcdc1900ef5583a4cb9f6d7b473742074ad"
   integrity sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==
 
+dexie-react-hooks@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/dexie-react-hooks/-/dexie-react-hooks-4.4.0.tgz#7229ef22b94d2c4e22007cee56c3a37ff2efa379"
+  integrity sha512-ObLXBS5+4BJU8vtSvBx6b9fY6zZYgniAtwxzjCHsUQadgbqYN6935X2/1TWw4Rf2N1aZV1io5/ziox4vKuxABA==
+
 dexie@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/dexie/-/dexie-4.4.2.tgz#447511328c982baaf6a88c736ddc08484916886c"

@@ -20,15 +20,25 @@ const requireUserId = async (): Promise<{
 };
 
 export const logSet = async (formData: FormData): Promise<void> => {
+  // 7c: client generates `id` + `set_number` so the Dexie row and the
+  // Supabase row share an id. Upsert on id is idempotent against
+  // queue-drain retries. A (workout_exercise_id, set_number) conflict
+  // surfaces as 23505 and fails the op — resolved in phase 7e.
+  const id = formData.get("id");
   const workoutExerciseId = formData.get("workoutExerciseId");
+  const setNumberStr = formData.get("set_number");
   const weightStr = formData.get("weight_kg");
   const repsStr = formData.get("reps");
 
+  if (typeof id !== "string") return;
   if (typeof workoutExerciseId !== "string") return;
+  if (typeof setNumberStr !== "string") return;
   if (typeof weightStr !== "string" || typeof repsStr !== "string") return;
 
+  const set_number = Number(setNumberStr);
   const weight_kg = Number(weightStr);
   const reps = Number(repsStr);
+  if (!Number.isInteger(set_number) || set_number <= 0) return;
   if (!Number.isFinite(weight_kg) || weight_kg < 0) return;
   if (!Number.isInteger(reps) || reps < 0) return;
 
@@ -49,40 +59,26 @@ export const logSet = async (formData: FormData): Promise<void> => {
   }
   const workoutId = ownerCheck.workout_id;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const { data: lastSet } = await supabase
-      .from("sets")
-      .select("set_number")
-      .eq("workout_exercise_id", workoutExerciseId)
-      .order("set_number", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const set_number = (lastSet?.set_number ?? 0) + 1;
-
-    const { error } = await supabase
-      .from("sets")
-      .insert({
-        workout_exercise_id: workoutExerciseId,
-        set_number,
-        weight_kg,
-        reps,
-      })
-      .select("id")
-      .single();
-
-    if (!error) {
-      revalidatePath(`/workout/${workoutId}`);
-      return;
-    }
-    if (error.code !== "23505") {
-      console.error("[logSet] insert set failed", error);
-      throw new Error("Could not log set");
-    }
-    // 23505: set_number collision with a concurrent write. Retry once.
+  const { data, error } = await supabase
+    .from("sets")
+    .upsert({
+      id,
+      workout_exercise_id: workoutExerciseId,
+      set_number,
+      weight_kg,
+      reps,
+    })
+    .select("id");
+  if (error) {
+    console.error("[logSet] upsert set failed", error);
+    throw new Error("Could not log set");
+  }
+  if (!data || data.length === 0) {
+    console.error("[logSet] no rows affected", { id });
+    throw new Error("Could not log set");
   }
 
-  throw new Error("Could not log set (conflict)");
+  revalidatePath(`/workout/${workoutId}`);
 };
 
 export const finishWorkout = async (formData: FormData): Promise<void> => {

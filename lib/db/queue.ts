@@ -24,7 +24,9 @@ export type QueueItem<T = unknown> = {
 };
 
 export type LogSetPayload = {
+  id: string;
   workoutExerciseId: string;
+  set_number: number;
   weight_kg: number;
   reps: number;
 };
@@ -85,7 +87,9 @@ const dispatchOp = async (item: QueueItem): Promise<void> => {
     case "logSet": {
       const p = item.payload as LogSetPayload;
       const fd = new FormData();
+      fd.append("id", p.id);
       fd.append("workoutExerciseId", p.workoutExerciseId);
+      fd.append("set_number", String(p.set_number));
       fd.append("weight_kg", String(p.weight_kg));
       fd.append("reps", String(p.reps));
       await logSetAction(fd);

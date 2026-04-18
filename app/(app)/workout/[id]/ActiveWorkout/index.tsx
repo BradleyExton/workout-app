@@ -9,6 +9,7 @@ import { formatVolume } from "@/lib/format/volume";
 import { relativeDays } from "@/lib/format/time";
 import { CurrentSetForm } from "./CurrentSetForm";
 import { FinishControls } from "./FinishControls";
+import { SetList } from "./SetList";
 import { activeWorkoutCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -138,21 +139,14 @@ export const ActiveWorkout = ({
           )}
 
           <div className={styles.setList}>
-            {currentSets.map((set) => (
-              <Card key={set.id} size="sm" className={styles.setRow}>
-                <span className={styles.setRowNumber}>{set.set_number}</span>
-                <span className={styles.setRowValue}>
-                  {formatWeight(set.weight_kg)} × {set.reps}
-                </span>
-                <span className={styles.setRowCheck}>
-                  {activeWorkoutCopy.setRowCheck}
-                </span>
-              </Card>
-            ))}
+            <SetList
+              workoutExerciseId={current.id}
+              serverSets={currentSets}
+            />
 
             <CurrentSetForm
               workoutExerciseId={current.id}
-              setNumber={nextSetNumber}
+              initialSetNumber={nextSetNumber}
               defaults={defaults}
               formId={CURRENT_SET_FORM_ID}
             />
