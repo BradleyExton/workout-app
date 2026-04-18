@@ -85,7 +85,7 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
   through to Next.js error UI. Log server-side, throw generic.
 - **[ ] M11. `Modal` has no focus trap / initial focus.** Destructive
   "Discard" action is one tab-and-enter from accidental trigger.
-- **[ ] M12. Proxy matcher PWA-unfriendly.** When milestone 8 ships SW +
+- **[x] M12. Proxy matcher PWA-unfriendly.** When milestone 8 ships SW +
   manifest fetches, every static fetch runs session refresh. Add
   `manifest\.webmanifest` and `sw\.js` to matcher exclusion.
 - **[~] M13. Missing index on `exercises(category, name)`.** 40 rows today,
@@ -100,8 +100,9 @@ Legend: `[ ]` open · `[x]` fixed · `[~]` deferred (tracked for later milestone
   delete.
 - **[x] L2. `formatDaysAgo(0)` → `"0d"` but copy calls today `"—"` elsewhere.**
   Pick `"today"` for 0 and stop using em-dash for that case.
-- **[ ] L3. `proxy.ts` has no explicit `runtime`.** `export const runtime =
-  "nodejs"` makes Node-only code paths unambiguous.
+- **[~] L3. `proxy.ts` has no explicit `runtime`.** N/A in Next 16 — Proxy
+  always runs on the Node.js runtime, and an explicit `runtime` export is
+  rejected at build time.
 - **[ ] L4. `Button` missing `form` attribute forwarding.** Already worked
   around with a raw `<button>` in `ActiveWorkout`. Fix via M4.
 - **[ ] L5. `deriveName` from email is scaffolding.** Track for YOU tab.
