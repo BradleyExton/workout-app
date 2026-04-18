@@ -1,21 +1,18 @@
 import type { JSX } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { PipRow } from "@/components/ui/PipRow";
 import { Mascot } from "@/components/mascot/Mascot";
-import { Timer } from "@/components/workout/Timer";
 import { createClient } from "@/lib/supabase/server";
 import { deriveHomeMetrics } from "@/lib/domain/homeMetrics";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
 import { formatVolume } from "@/lib/format/volume";
 import { formatDaysAgo } from "@/lib/format/time";
 import { type MuscleGroup } from "@/lib/db/types";
-import * as buttonStyles from "@/components/ui/Button/styles";
 import { signOut } from "./actions";
 import { homeCopy } from "./copy";
+import { HomeCardioCard } from "./HomeCardioCard";
+import { ResumeCta } from "./ResumeCta";
 import * as styles from "./styles";
-
-const CARDIO_TARGET_PER_WEEK = 3;
 
 const formatHeaderDate = (now: Date): string => {
   const weekday = now.toLocaleDateString("en-US", { weekday: "long" });
@@ -67,7 +64,7 @@ export default async function HomePage(): Promise<JSX.Element> {
       .gte("started_at", since60),
     supabase
       .from("cardio_sessions")
-      .select("started_at, duration_sec, distance_m")
+      .select("id, started_at, duration_sec, distance_m")
       .gte("started_at", since30),
   ]);
 
@@ -104,6 +101,7 @@ export default async function HomePage(): Promise<JSX.Element> {
 
   const workoutStartedAts = (finishedWorkouts ?? []).map((w) => w.started_at);
   const cardioSessions = (rawCardio ?? []).map((row) => ({
+    id: row.id,
     started_at: row.started_at,
     duration_sec: row.duration_sec,
     distance_m: row.distance_m,
@@ -192,34 +190,10 @@ export default async function HomePage(): Promise<JSX.Element> {
       </div>
 
       <h2 className={styles.cardioHeader}>{homeCopy.cardioHeader}</h2>
-      <Link href="/cardio/new" className={styles.cardioLink}>
-        <Card size="sm" className={styles.cardioCard}>
-          <Mascot kind="run" className={styles.cardioMascot} />
-          <div className={styles.cardioBody}>
-            <div className={styles.cardioTopRow}>
-              <p className={styles.cardioTitle}>CARDIO</p>
-              {metrics.cardio.sessionsThisWeek > 0 ? (
-                <p className={styles.cardioStats}>
-                  {metrics.cardio.distanceMeters > 0 &&
-                    `${(metrics.cardio.distanceMeters / 1000).toFixed(1)} km · `}
-                  {Math.round(metrics.cardio.durationSec / 60)} min
-                </p>
-              ) : (
-                <p className={styles.cardioEmpty}>{homeCopy.cardioEmpty}</p>
-              )}
-            </div>
-            <div className={styles.cardioPips}>
-              <PipRow
-                filled={Math.min(
-                  metrics.cardio.sessionsThisWeek,
-                  CARDIO_TARGET_PER_WEEK,
-                )}
-                total={CARDIO_TARGET_PER_WEEK}
-              />
-            </div>
-          </div>
-        </Card>
-      </Link>
+      <HomeCardioCard
+        serverSessions={cardioSessions}
+        nowMs={now.getTime()}
+      />
 
       <form action={signOut} className={styles.signOutRow}>
         <button type="submit" className={styles.signOutBtn}>
@@ -228,23 +202,7 @@ export default async function HomePage(): Promise<JSX.Element> {
       </form>
 
       <div className={styles.ctaZone}>
-        {activeWorkout ? (
-          <Link
-            className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
-            href={`/workout/${activeWorkout.id}`}
-          >
-            <span className={styles.resumeDot} />
-            <span>{homeCopy.backToWorkoutPrefix}</span>
-            <Timer since={new Date(activeWorkout.started_at).getTime()} />
-          </Link>
-        ) : (
-          <Link
-            className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
-            href="/workout/new"
-          >
-            {homeCopy.startWorkout}
-          </Link>
-        )}
+        <ResumeCta serverActive={activeWorkout ?? null} />
       </div>
     </main>
   );
