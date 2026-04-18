@@ -1,16 +1,13 @@
 import type { JSX } from "react";
 import { Card } from "@/components/ui/Card";
-import { PipRow } from "@/components/ui/PipRow";
 import { Mascot } from "@/components/mascot/Mascot";
 import { createClient } from "@/lib/supabase/server";
-import { deriveHomeMetrics } from "@/lib/domain/homeMetrics";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
-import { formatVolume } from "@/lib/format/volume";
-import { formatDaysAgo } from "@/lib/format/time";
 import { type MuscleGroup } from "@/lib/db/types";
 import { signOut } from "./actions";
 import { homeCopy } from "./copy";
 import { HomeCardioCard } from "./HomeCardioCard";
+import { HomeMetrics } from "./HomeMetrics";
 import { ResumeCta } from "./ResumeCta";
 import * as styles from "./styles";
 
@@ -26,8 +23,6 @@ const deriveName = (email: string | null | undefined): string => {
   const first = local.split(/[._-]/)[0] ?? "";
   return first.toUpperCase() || "FRIEND";
 };
-
-const PIPS_PER_MUSCLE = 5;
 
 export default async function HomePage(): Promise<JSX.Element> {
   const supabase = await createClient();
@@ -54,7 +49,7 @@ export default async function HomePage(): Promise<JSX.Element> {
     supabase
       .from("sets")
       .select(
-        "weight_kg, reps, completed_at, workout_exercise:workout_exercises!inner(workout_id, exercise:exercises!inner(primary_muscle))",
+        "id, weight_kg, reps, completed_at, workout_exercise:workout_exercises!inner(workout_id, exercise:exercises!inner(primary_muscle))",
       )
       .gte("completed_at", since30),
     supabase
@@ -69,6 +64,7 @@ export default async function HomePage(): Promise<JSX.Element> {
   ]);
 
   type RawSetRow = {
+    id: string;
     weight_kg: number | string;
     reps: number;
     completed_at: string;
@@ -90,6 +86,7 @@ export default async function HomePage(): Promise<JSX.Element> {
     if (!ex) return [];
     return [
       {
+        id: row.id,
         weight_kg: Number(row.weight_kg),
         reps: row.reps,
         completed_at: row.completed_at,
@@ -107,12 +104,6 @@ export default async function HomePage(): Promise<JSX.Element> {
     distance_m: row.distance_m,
   }));
   const now = currentDate();
-  const metrics = deriveHomeMetrics(
-    flatSets,
-    workoutStartedAts,
-    cardioSessions,
-    now,
-  );
 
   const headerDate = formatHeaderDate(now);
   const displayName = deriveName(user?.email);
@@ -133,61 +124,11 @@ export default async function HomePage(): Promise<JSX.Element> {
         </Card>
       </div>
 
-      <Card variant="black" className={styles.coverageHero}>
-        <p className={styles.coverageKicker}>{homeCopy.coverageKicker}</p>
-        <div className={styles.coverageNumbersRow}>
-          <span className={styles.coverageBigNumber}>
-            {metrics.groupsHitThisWeek}
-          </span>
-          <span className={styles.coverageOfText}>{homeCopy.coverageOf}</span>
-          <span className={styles.coverageSuffix}>{homeCopy.coverageSuffix}</span>
-        </div>
-        <PipRow
-          filled={metrics.groupsHitThisWeek}
-          total={6}
-          inverse
-          className="mt-3"
-        />
-      </Card>
-
-      <div className={styles.statsRow}>
-        <Card variant="lime" size="sm" className={styles.statCard}>
-          <p className={styles.statLabel}>{homeCopy.statWorkouts}</p>
-          <p className={styles.statValue}>{metrics.workoutsThisWeek}</p>
-        </Card>
-        <Card variant="white" size="sm" className={styles.statCard}>
-          <p className={styles.statLabel}>{homeCopy.statVolume}</p>
-          <p className={styles.statValue}>{formatVolume(metrics.volumeThisWeek)}</p>
-        </Card>
-        <Card variant="black" size="sm" className={styles.statCard}>
-          <p className={styles.statLabel}>{homeCopy.statStreak}</p>
-          <p className={styles.statValue}>{metrics.streakDays}d</p>
-        </Card>
-      </div>
-
-      <h2 className={styles.musclesHeader}>{homeCopy.musclesHeader}</h2>
-      <div className={styles.muscleGrid}>
-        {metrics.coverage.map((entry) => (
-          <Card
-            key={entry.group}
-            size="sm"
-            variant={entry.setsThisWeek === 0 ? "cream" : "white"}
-            className={styles.muscleCard}
-          >
-            <p className={styles.muscleName}>{entry.group.toUpperCase()}</p>
-            <PipRow
-              filled={Math.min(entry.setsThisWeek, PIPS_PER_MUSCLE)}
-              total={PIPS_PER_MUSCLE}
-              size="sm"
-              className="mt-1"
-            />
-            <p className={styles.muscleDaysRow}>
-              {entry.overdue && <span className={styles.muscleDot} />}
-              {formatDaysAgo(entry.lastHitDaysAgo)}
-            </p>
-          </Card>
-        ))}
-      </div>
+      <HomeMetrics
+        serverFlatSets={flatSets}
+        serverWorkoutStartedAts={workoutStartedAts}
+        nowMs={now.getTime()}
+      />
 
       <h2 className={styles.cardioHeader}>{homeCopy.cardioHeader}</h2>
       <HomeCardioCard

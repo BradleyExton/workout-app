@@ -1,15 +1,5 @@
 export const homeCopy = {
   greetingPrefix: "Hey,",
-  startWorkout: "Start workout →",
-  backToWorkoutPrefix: "← Back to workout ·",
-  coverageKicker: "This Week",
-  coverageOf: "of 6",
-  coverageSuffix: "muscle\ngroups\nhit",
-  statWorkouts: "Workouts",
-  statVolume: "Volume kg",
-  statStreak: "Streak",
-  musclesHeader: "Muscles",
   cardioHeader: "Cardio",
-  cardioEmpty: "Tap to log",
   signOut: "Sign out",
 } as const;
