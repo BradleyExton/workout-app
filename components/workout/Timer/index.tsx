@@ -17,5 +17,11 @@ export const Timer = ({ since, className = "" }: TimerProps): JSX.Element => {
     return () => clearInterval(id);
   }, [since]);
 
-  return <span className={className}>{formatElapsed(elapsed)}</span>;
+  // SSR renders Date.now() at server time; client hydrates seconds later
+  // and recomputes — the mismatch is expected and resolves on first tick.
+  return (
+    <span className={className} suppressHydrationWarning>
+      {formatElapsed(elapsed)}
+    </span>
+  );
 };
