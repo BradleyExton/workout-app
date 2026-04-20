@@ -4,6 +4,10 @@ export const subheading = "text-sm opacity-70";
 export const label = "flex flex-col gap-1 text-xs font-black uppercase tracking-widest";
 export const input =
   "border-[2.5px] border-ink rounded-[10px] bg-white px-3 py-2.5 text-base font-bold text-ink placeholder:opacity-40 outline-none focus:shadow-brutal-sm disabled:opacity-50";
+export const codeInput =
+  "border-[2.5px] border-ink rounded-[10px] bg-white px-3 py-2.5 text-center text-2xl font-bold tracking-[0.5em] text-ink placeholder:opacity-40 outline-none focus:shadow-brutal-sm disabled:opacity-50";
 export const message = "text-sm font-semibold";
 export const error = "text-sm font-semibold text-urgent";
 export const liveRegion = "min-h-5";
+export const changeEmail =
+  "self-start text-xs font-black uppercase tracking-widest underline opacity-70 hover:opacity-100";
