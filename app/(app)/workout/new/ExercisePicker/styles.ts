@@ -19,3 +19,7 @@ export const rowBadge =
   "flex-shrink-0 kicker bg-ink text-white px-2 py-0.5 rounded-full border-2 border-ink";
 
 export const empty = "text-sm font-semibold opacity-60 text-center py-8";
+export const emptyBlock = "flex flex-col items-center gap-3 py-8";
+export const emptyText = "text-sm font-semibold opacity-60";
+export const clearBtn =
+  "border-[2px] border-ink rounded-lg bg-white px-4 py-2 text-xs font-black uppercase tracking-widest";

@@ -22,6 +22,14 @@ export const lastSessionLabel = "kicker opacity-70";
 export const lastSessionPills = "flex gap-1.5 flex-wrap text-sm font-bold";
 export const lastSessionPill = "bg-white border-2 border-ink px-2 py-1 rounded";
 
+export const prRow = "mt-2 pt-2 border-t-2 border-ink/20";
+export const prLabel = "kicker opacity-70 mb-2";
+export const prPills = "flex gap-1.5 flex-wrap text-xs font-bold";
+export const prPill =
+  "bg-lime border-2 border-ink px-2 py-1 rounded flex items-center gap-1";
+export const prPillKey = "text-[9px] opacity-70";
+export const prPillValue = "font-black";
+
 export const setList = "flex flex-col gap-2";
 export const setRow = "p-3 flex items-center gap-3";
 export const setRowNumber = "display text-lg w-7 text-center";

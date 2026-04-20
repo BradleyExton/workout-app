@@ -1,7 +1,8 @@
 export const installPromptCopy = {
-  kicker: "Install",
-  body: "Add Workout to your home screen for one-tap access.",
-  iosBody: "Tap the share icon, then 'Add to Home Screen'.",
+  kicker: "Install the app",
+  body: "One-tap access, works offline, logs survive flaky gym wifi.",
+  iosBody:
+    "Tap Share, then 'Add to Home Screen'. Works offline once installed.",
   install: "INSTALL",
   dismiss: "×",
   dismissAria: "Dismiss install prompt",

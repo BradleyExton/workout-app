@@ -25,6 +25,7 @@ export default async function ActiveWorkoutPage({
       workoutExercises: [],
       sets: [],
       lastSession: null,
+      prs: [],
     };
     return <Hydrator workoutId={id} server={empty} />;
   }
@@ -112,6 +113,22 @@ export default async function ActiveWorkoutPage({
     }
   }
 
+  const exerciseIds = Array.from(
+    new Set(exercisesList.map((we) => we.exercise_id)),
+  );
+  const { data: prRows } = exerciseIds.length
+    ? await supabase
+        .from("personal_records")
+        .select("exercise_id, pr_type, value")
+        .in("exercise_id", exerciseIds)
+    : { data: null };
+
+  const prs = (prRows ?? []).map((r) => ({
+    exercise_id: r.exercise_id,
+    pr_type: r.pr_type,
+    value: Number(r.value),
+  }));
+
   const snapshot: ServerSnapshot = {
     workout: {
       id: workout.id,
@@ -121,6 +138,7 @@ export default async function ActiveWorkoutPage({
     workoutExercises: exercisesList,
     sets,
     lastSession,
+    prs,
   };
 
   return <Hydrator workoutId={id} server={snapshot} />;

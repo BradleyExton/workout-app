@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, type JSX } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db/dexie";
 import type { LogSetPayload } from "@/lib/db/queue";
 import type { MuscleGroup } from "@/lib/db/types";
+import { computePrFlags, type PrType, type SetForPr } from "@/lib/domain/pr";
 import { ActiveWorkout } from "..";
 import { hydratorCopy } from "./copy";
 import * as styles from "./styles";
@@ -37,6 +39,12 @@ type ServerLastSession = {
   sets: { set_number: number; weight_kg: number; reps: number }[];
 };
 
+type ServerPr = {
+  exercise_id: string;
+  pr_type: PrType;
+  value: number;
+};
+
 export type ServerSnapshot = {
   workout: {
     id: string;
@@ -46,6 +54,7 @@ export type ServerSnapshot = {
   workoutExercises: ServerWorkoutExercise[];
   sets: ServerSet[];
   lastSession: ServerLastSession | null;
+  prs: ServerPr[];
 };
 
 type HydratorProps = {
@@ -219,8 +228,12 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
 
   if (!merged.workout) {
     return (
-      <main className={styles.empty}>
-        <p>{hydratorCopy.notFound}</p>
+      <main className={styles.notFoundWrap}>
+        <h1 className={styles.notFoundTitle}>{hydratorCopy.notFound}</h1>
+        <p className={styles.notFoundBody}>{hydratorCopy.notFoundBody}</p>
+        <Link href="/" className={styles.notFoundCta}>
+          {hydratorCopy.homeCta}
+        </Link>
       </main>
     );
   }
@@ -249,6 +262,40 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
           sets: server.lastSession.sets,
         }
       : null;
+
+  const currentExerciseId = current?.exercise?.id ?? null;
+  const currentExercisePrs = currentExerciseId
+    ? server.prs.filter((pr) => pr.exercise_id === currentExerciseId)
+    : [];
+
+  const currentExercisePrPills = {
+    oneRm: currentExercisePrs.find((p) => p.pr_type === "1rm")?.value ?? null,
+    volume: currentExercisePrs.find((p) => p.pr_type === "volume")?.value ?? null,
+    reps: currentExercisePrs.find((p) => p.pr_type === "reps")?.value ?? null,
+  };
+
+  const orderedCurrentSets: SetForPr[] = currentExerciseId
+    ? currentSets
+        .filter((s) => !s.pending)
+        .map((s) => ({
+          id: s.id,
+          exercise_id: currentExerciseId,
+          weight_kg: s.weight_kg,
+          reps: s.reps,
+          completed_at: "",
+        }))
+    : [];
+
+  const prFlagMap = computePrFlags(
+    currentExercisePrs.map((p) => ({
+      exercise_id: p.exercise_id,
+      pr_type: p.pr_type,
+      value: p.value,
+    })),
+    orderedCurrentSets,
+  );
+  const setPrFlags: Record<string, { oneRm: boolean; volume: boolean; reps: boolean }> = {};
+  for (const [setId, flags] of prFlagMap) setPrFlags[setId] = flags;
 
   const todayItems = merged.workoutExercises
     .filter((we) => we.id !== current?.id && we.exercise !== null)
@@ -282,6 +329,8 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
       }
       currentSets={currentSets}
       lastSession={lastSession}
+      prs={currentExercisePrPills}
+      setPrFlags={setPrFlags}
       todayItems={todayItems}
       stats={{
         sets: totalSets,

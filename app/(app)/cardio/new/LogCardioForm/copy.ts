@@ -9,6 +9,8 @@ export const cardioFormCopy = {
   durationLabel: "Duration",
   durationUnit: "min",
   submit: "LOG CARDIO →",
+  errorDuration: "Duration is required (at least 1 min).",
+  errorDistance: "Distance must be 0 or more.",
 } as const;
 
 export const modalityLabel: Record<CardioModality, string> = {

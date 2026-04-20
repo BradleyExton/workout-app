@@ -1,30 +1,23 @@
-import type { JSX } from "react";
+import type { ComponentPropsWithoutRef, JSX } from "react";
 import * as styles from "./styles";
 
 type ButtonVariant = keyof typeof styles.variant;
 
-type ButtonProps = {
+type ButtonProps = ComponentPropsWithoutRef<"button"> & {
   variant?: ButtonVariant;
-  type?: "button" | "submit" | "reset";
-  disabled?: boolean;
-  onClick?: () => void;
-  className?: string;
-  children: React.ReactNode;
 };
 
 export const Button = ({
   variant = "primary",
   type = "button",
-  disabled,
-  onClick,
   className = "",
   children,
+  ...rest
 }: ButtonProps): JSX.Element => (
   <button
     type={type}
-    disabled={disabled}
-    onClick={onClick}
     className={`${styles.base} ${styles.variant[variant]} ${className}`}
+    {...rest}
   >
     {children}
   </button>

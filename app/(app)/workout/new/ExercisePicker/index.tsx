@@ -151,7 +151,23 @@ export const ExercisePicker = ({
       </div>
 
       {visible.length === 0 ? (
-        <p className={styles.empty}>{pickerCopy.empty}</p>
+        filter !== "All" || query !== "" ? (
+          <div className={styles.emptyBlock}>
+            <p className={styles.emptyText}>{pickerCopy.emptyFiltered}</p>
+            <button
+              type="button"
+              className={styles.clearBtn}
+              onClick={() => {
+                setFilter("All");
+                setQuery("");
+              }}
+            >
+              {pickerCopy.clearFilters}
+            </button>
+          </div>
+        ) : (
+          <p className={styles.empty}>{pickerCopy.empty}</p>
+        )
       ) : (
         <div className={styles.list}>
           {visible.map((exercise) => (

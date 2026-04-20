@@ -35,6 +35,14 @@ type SetRow = {
   pending: boolean;
 };
 
+type SetPrFlags = { oneRm: boolean; volume: boolean; reps: boolean };
+
+type ExercisePrs = {
+  oneRm: number | null;
+  volume: number | null;
+  reps: number | null;
+};
+
 type LastSessionSet = {
   set_number: number;
   weight_kg: number;
@@ -57,6 +65,8 @@ type ActiveWorkoutProps = {
   current: WorkoutExercise | null;
   currentSets: SetRow[];
   lastSession: { finishedAt: string; sets: LastSessionSet[] } | null;
+  prs: ExercisePrs;
+  setPrFlags: Record<string, SetPrFlags>;
   todayItems: TodayItem[];
   stats: { sets: number; exercises: number; volume: number };
 };
@@ -66,6 +76,8 @@ export const ActiveWorkout = ({
   current,
   currentSets,
   lastSession,
+  prs,
+  setPrFlags,
   todayItems,
   stats,
 }: ActiveWorkoutProps): JSX.Element => {
@@ -121,26 +133,79 @@ export const ActiveWorkout = ({
             <h2 className={styles.exerciseName}>{current.exercise.name}</h2>
           </Card>
 
-          {lastSession && lastSession.sets.length > 0 && (
+          {(lastSession && lastSession.sets.length > 0) ||
+          prs.oneRm !== null ||
+          prs.volume !== null ||
+          prs.reps !== null ? (
             <Card variant="cream" className={styles.lastSessionCard}>
-              <div className={styles.lastSessionHeader}>
-                <p className={styles.lastSessionLabel}>
-                  {activeWorkoutCopy.lastSessionPrefix}{" "}
-                  {relativeDays(lastSession.finishedAt)}
-                </p>
-              </div>
-              <div className={styles.lastSessionPills}>
-                {lastSession.sets.map((set) => (
-                  <span key={set.set_number} className={styles.lastSessionPill}>
-                    {formatWeight(set.weight_kg)}×{set.reps}
-                  </span>
-                ))}
-              </div>
+              {lastSession && lastSession.sets.length > 0 && (
+                <>
+                  <div className={styles.lastSessionHeader}>
+                    <p className={styles.lastSessionLabel}>
+                      {activeWorkoutCopy.lastSessionPrefix}{" "}
+                      {relativeDays(lastSession.finishedAt)}
+                    </p>
+                  </div>
+                  <div className={styles.lastSessionPills}>
+                    {lastSession.sets.map((set) => (
+                      <span
+                        key={set.set_number}
+                        className={styles.lastSessionPill}
+                      >
+                        {formatWeight(set.weight_kg)}×{set.reps}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+              {(prs.oneRm !== null ||
+                prs.volume !== null ||
+                prs.reps !== null) && (
+                <div
+                  className={
+                    lastSession && lastSession.sets.length > 0
+                      ? styles.prRow
+                      : ""
+                  }
+                >
+                  <p className={styles.prLabel}>{activeWorkoutCopy.prLabel}</p>
+                  <div className={styles.prPills}>
+                    {prs.oneRm !== null && (
+                      <span className={styles.prPill}>
+                        <span className={styles.prPillKey}>
+                          {activeWorkoutCopy.pr1rm}
+                        </span>
+                        <span className={styles.prPillValue}>
+                          {formatWeight(prs.oneRm)}
+                        </span>
+                      </span>
+                    )}
+                    {prs.volume !== null && (
+                      <span className={styles.prPill}>
+                        <span className={styles.prPillKey}>
+                          {activeWorkoutCopy.prVolume}
+                        </span>
+                        <span className={styles.prPillValue}>
+                          {formatVolume(prs.volume)}
+                        </span>
+                      </span>
+                    )}
+                    {prs.reps !== null && (
+                      <span className={styles.prPill}>
+                        <span className={styles.prPillKey}>
+                          {activeWorkoutCopy.prReps}
+                        </span>
+                        <span className={styles.prPillValue}>{prs.reps}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </Card>
-          )}
+          ) : null}
 
           <div className={styles.setList}>
-            <SetList sets={currentSets} />
+            <SetList sets={currentSets} prFlags={setPrFlags} />
 
             <CurrentSetForm
               workoutExerciseId={current.id}

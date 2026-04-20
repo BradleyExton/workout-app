@@ -20,3 +20,6 @@ export const fieldUnit = "text-[10px] font-bold opacity-60";
 export const ctaZone =
   "fixed left-0 right-0 bottom-0 px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper pointer-events-none";
 export const ctaInner = "pointer-events-auto";
+
+export const fieldError = "border-[2.5px] border-urgent";
+export const errorText = "text-xs font-black text-urgent text-center";

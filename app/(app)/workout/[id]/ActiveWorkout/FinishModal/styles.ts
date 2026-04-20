@@ -14,3 +14,16 @@ export const divider = "w-px h-8 bg-ink/20";
 export const primaryCta = "mt-4";
 export const discardBtn =
   "mt-2 w-full text-center py-2 text-xs font-black uppercase tracking-widest text-urgent";
+
+export const unlocksSection = "mt-4 flex flex-col gap-2";
+export const unlocksKicker = "kicker opacity-70";
+export const unlocksTitle = "display text-xl leading-none";
+export const unlockRow =
+  "brutalist-sm bg-lime px-3 py-2 flex items-center gap-2";
+export const unlockTag =
+  "text-[9px] font-black uppercase tracking-widest bg-ink text-lime px-1.5 py-0.5 rounded";
+export const unlockBody = "text-sm font-bold flex-1 truncate";
+export const unlockIcon = "text-lg leading-none";
+
+export const drainErrorRow =
+  "mt-3 brutalist-sm bg-white px-3 py-2 text-xs font-semibold leading-snug border-urgent";

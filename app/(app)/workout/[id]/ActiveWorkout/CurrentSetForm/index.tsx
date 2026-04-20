@@ -26,14 +26,26 @@ export const CurrentSetForm = ({
   const [weight, setWeight] = useState(defaults.weight_kg);
   const [reps, setReps] = useState(defaults.reps);
   const [nextSetNumber, setNextSetNumber] = useState(initialSetNumber);
+  const [error, setError] = useState<"weight" | "reps" | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
     const weightValue = Number(weight);
     const repsValue = Number(reps);
-    if (!Number.isFinite(weightValue) || weightValue < 0) return;
-    if (!Number.isInteger(repsValue) || repsValue < 0) return;
+    if (weight.trim() === "" || !Number.isFinite(weightValue) || weightValue < 0) {
+      setError("weight");
+      return;
+    }
+    if (
+      reps.trim() === "" ||
+      !Number.isInteger(repsValue) ||
+      repsValue < 0
+    ) {
+      setError("reps");
+      return;
+    }
+    setError(null);
 
     const id = newId();
     const set_number = nextSetNumber;
@@ -75,7 +87,9 @@ export const CurrentSetForm = ({
         </div>
 
         <div className={styles.grid}>
-          <label className={styles.field}>
+          <label
+            className={`${styles.field} ${error === "weight" ? styles.fieldError : ""}`}
+          >
             <span className={styles.fieldLabel}>{currentSetCopy.weightLabel}</span>
             <input
               className={styles.input}
@@ -85,13 +99,19 @@ export const CurrentSetForm = ({
               step="0.5"
               min="0"
               required
+              aria-invalid={error === "weight"}
               value={weight}
-              onChange={(event) => setWeight(event.target.value)}
+              onChange={(event) => {
+                setWeight(event.target.value);
+                if (error === "weight") setError(null);
+              }}
             />
             <span className={styles.fieldUnit}>{currentSetCopy.weightUnit}</span>
           </label>
 
-          <label className={styles.field}>
+          <label
+            className={`${styles.field} ${error === "reps" ? styles.fieldError : ""}`}
+          >
             <span className={styles.fieldLabel}>{currentSetCopy.repsLabel}</span>
             <input
               className={styles.input}
@@ -101,12 +121,24 @@ export const CurrentSetForm = ({
               step="1"
               min="0"
               required
+              aria-invalid={error === "reps"}
               value={reps}
-              onChange={(event) => setReps(event.target.value)}
+              onChange={(event) => {
+                setReps(event.target.value);
+                if (error === "reps") setError(null);
+              }}
             />
             <span className={styles.fieldUnit}>{currentSetCopy.repsUnit}</span>
           </label>
         </div>
+
+        {error && (
+          <p role="alert" className={styles.errorText}>
+            {error === "weight"
+              ? currentSetCopy.errorWeight
+              : currentSetCopy.errorReps}
+          </p>
+        )}
       </form>
     </Card>
   );

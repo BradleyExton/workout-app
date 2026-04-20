@@ -6,8 +6,10 @@ import { currentDate, isoDaysAgo } from "@/lib/domain/time";
 import { type MuscleGroup } from "@/lib/db/types";
 import { signOut } from "./actions";
 import { homeCopy } from "./copy";
+import { HomeAchievements } from "./HomeAchievements";
 import { HomeCardioCard } from "./HomeCardioCard";
 import { HomeMetrics } from "./HomeMetrics";
+import { HomeOnboarding } from "./HomeOnboarding";
 import { InstallPrompt } from "./InstallPrompt";
 import { ResumeCta } from "./ResumeCta";
 import * as styles from "./styles";
@@ -39,6 +41,7 @@ export default async function HomePage(): Promise<JSX.Element> {
     { data: rawSets },
     { data: finishedWorkouts },
     { data: rawCardio },
+    { data: recentUnlocks },
   ] = await Promise.all([
     supabase
       .from("workouts")
@@ -62,6 +65,11 @@ export default async function HomePage(): Promise<JSX.Element> {
       .from("cardio_sessions")
       .select("id, started_at, duration_sec, distance_m")
       .gte("started_at", since30),
+    supabase
+      .from("user_achievements")
+      .select("unlocked_at, achievement:achievements!inner(slug, title, icon)")
+      .order("unlocked_at", { ascending: false })
+      .limit(3),
   ]);
 
   type RawSetRow = {
@@ -104,7 +112,27 @@ export default async function HomePage(): Promise<JSX.Element> {
     duration_sec: row.duration_sec,
     distance_m: row.distance_m,
   }));
+
+  type UnlockRow = {
+    unlocked_at: string;
+    achievement:
+      | { slug: string; title: string; icon: string | null }
+      | { slug: string; title: string; icon: string | null }[]
+      | null;
+  };
+  const unlocks = ((recentUnlocks ?? []) as UnlockRow[]).flatMap((row) => {
+    const a = Array.isArray(row.achievement) ? row.achievement[0] : row.achievement;
+    if (!a) return [];
+    return [{ slug: a.slug, title: a.title, icon: a.icon }];
+  });
+
   const now = currentDate();
+
+  const isFreshAccount =
+    workoutStartedAts.length === 0 &&
+    flatSets.length === 0 &&
+    cardioSessions.length === 0 &&
+    !activeWorkout;
 
   const headerDate = formatHeaderDate(now);
   const displayName = deriveName(user?.email);
@@ -125,11 +153,15 @@ export default async function HomePage(): Promise<JSX.Element> {
         </Card>
       </div>
 
+      {isFreshAccount && <HomeOnboarding />}
+
       <HomeMetrics
         serverFlatSets={flatSets}
         serverWorkoutStartedAts={workoutStartedAts}
         nowMs={now.getTime()}
       />
+
+      <HomeAchievements unlocks={unlocks} />
 
       <h2 className={styles.cardioHeader}>{homeCopy.cardioHeader}</h2>
       <HomeCardioCard

@@ -18,6 +18,7 @@ export const LogCardioForm = (): JSX.Element => {
   const [modality, setModality] = useState<CardioModality>("run");
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
+  const [error, setError] = useState<"duration" | "distance" | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
 
@@ -25,14 +26,21 @@ export const LogCardioForm = (): JSX.Element => {
     event.preventDefault();
 
     const durationMin = Number(duration);
-    if (!Number.isFinite(durationMin) || durationMin <= 0) return;
+    if (duration.trim() === "" || !Number.isFinite(durationMin) || durationMin <= 0) {
+      setError("duration");
+      return;
+    }
 
     let distanceM: number | null = null;
     if (distance.trim() !== "") {
       const km = Number(distance);
-      if (!Number.isFinite(km) || km < 0) return;
+      if (!Number.isFinite(km) || km < 0) {
+        setError("distance");
+        return;
+      }
       distanceM = Math.round(km * 1000);
     }
+    setError(null);
 
     startTransition(async () => {
       const id = newId();
@@ -87,7 +95,9 @@ export const LogCardioForm = (): JSX.Element => {
         </div>
 
         <div className={styles.fieldGrid}>
-          <label className={styles.field}>
+          <label
+            className={`${styles.field} ${error === "distance" ? styles.fieldError : ""}`}
+          >
             <span className={styles.fieldLabel}>{cardioFormCopy.distanceLabel}</span>
             <input
               className={styles.input}
@@ -96,13 +106,19 @@ export const LogCardioForm = (): JSX.Element => {
               inputMode="decimal"
               step="0.1"
               min="0"
+              aria-invalid={error === "distance"}
               value={distance}
-              onChange={(event) => setDistance(event.target.value)}
+              onChange={(event) => {
+                setDistance(event.target.value);
+                if (error === "distance") setError(null);
+              }}
             />
             <span className={styles.fieldUnit}>{cardioFormCopy.distanceUnit}</span>
           </label>
 
-          <label className={styles.field}>
+          <label
+            className={`${styles.field} ${error === "duration" ? styles.fieldError : ""}`}
+          >
             <span className={styles.fieldLabel}>{cardioFormCopy.durationLabel}</span>
             <input
               className={styles.input}
@@ -112,12 +128,24 @@ export const LogCardioForm = (): JSX.Element => {
               step="1"
               min="1"
               required
+              aria-invalid={error === "duration"}
               value={duration}
-              onChange={(event) => setDuration(event.target.value)}
+              onChange={(event) => {
+                setDuration(event.target.value);
+                if (error === "duration") setError(null);
+              }}
             />
             <span className={styles.fieldUnit}>{cardioFormCopy.durationUnit}</span>
           </label>
         </div>
+
+        {error && (
+          <p role="alert" className={styles.errorText}>
+            {error === "duration"
+              ? cardioFormCopy.errorDuration
+              : cardioFormCopy.errorDistance}
+          </p>
+        )}
       </form>
 
       <div className={styles.ctaZone}>

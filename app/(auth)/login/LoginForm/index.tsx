@@ -48,12 +48,14 @@ export const LoginForm = (): JSX.Element => {
         />
       </label>
 
-      <Button type="submit" disabled={locked}>
+      <Button type="submit" disabled={locked} aria-busy={status === "sending"}>
         {status === "sending" ? loginCopy.submitting : loginCopy.submit}
       </Button>
 
-      {status === "sent" && <p className={styles.message}>{loginCopy.success}</p>}
-      {status === "error" && <p className={styles.error}>{loginCopy.error}</p>}
+      <div role="status" aria-live="polite" className={styles.liveRegion}>
+        {status === "sent" && <p className={styles.message}>{loginCopy.success}</p>}
+        {status === "error" && <p className={styles.error}>{loginCopy.error}</p>}
+      </div>
     </form>
   );
 };
