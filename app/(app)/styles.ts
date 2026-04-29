@@ -8,9 +8,6 @@ export const mascotWrap = "w-20 h-20 flex items-center justify-center overflow-h
 export const mascot = "w-[90px] h-[90px]";
 
 export const ctaZone =
-  "fixed left-0 right-0 bottom-0 px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper pointer-events-none";
+  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper pointer-events-none";
 
 export const cardioHeader = "kicker opacity-70 mt-2";
-
-export const signOutRow = "flex justify-center pt-2";
-export const signOutBtn = "kicker opacity-50";

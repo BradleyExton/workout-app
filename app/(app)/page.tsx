@@ -4,7 +4,6 @@ import { Mascot } from "@/components/mascot/Mascot";
 import { createClient } from "@/lib/supabase/server";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
 import { type MuscleGroup } from "@/lib/db/types";
-import { signOut } from "./actions";
 import { homeCopy } from "./copy";
 import { HomeAchievements } from "./HomeAchievements";
 import { HomeCardioCard } from "./HomeCardioCard";
@@ -170,12 +169,6 @@ export default async function HomePage(): Promise<JSX.Element> {
       />
 
       <InstallPrompt />
-
-      <form action={signOut} className={styles.signOutRow}>
-        <button type="submit" className={styles.signOutBtn}>
-          {homeCopy.signOut}
-        </button>
-      </form>
 
       <div className={styles.ctaZone}>
         <ResumeCta serverActive={activeWorkout ?? null} />

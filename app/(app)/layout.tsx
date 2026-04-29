@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { QueueSyncer } from "@/components/system/QueueSyncer";
 import { SwRegister } from "@/components/system/SwRegister";
+import { TabBar } from "@/components/TabBar";
 
 export default async function AppLayout({
   children,
@@ -21,6 +22,7 @@ export default async function AppLayout({
       <QueueSyncer />
       <SwRegister />
       {children}
+      <TabBar />
     </>
   );
 }
