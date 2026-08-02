@@ -29,9 +29,19 @@ export const CurrentSetForm = ({
 }: CurrentSetFormProps): JSX.Element => {
   const [weight, setWeight] = useState(defaults.weight_kg);
   const [reps, setReps] = useState(defaults.reps);
-  const [nextSetNumber, setNextSetNumber] = useState(initialSetNumber);
+  // Highest set number this form instance has handed out.
+  const [lastLogged, setLastLogged] = useState(0);
   const [error, setError] = useState<FieldError | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Derived, not seeded-once state. The already-logged sets can arrive
+  // *after* this form mounts: reopening a workout offline renders the
+  // service worker's cached server snapshot first and only then hears
+  // back from Dexie. A counter captured at mount stayed at 1 while the
+  // session already had a set 1, so the next set was logged with a
+  // duplicate set_number. Taking the max keeps it correct whichever
+  // source is ahead — our own last write, or the session catching up.
+  const nextSetNumber = Math.max(initialSetNumber, lastLogged + 1);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -90,7 +100,7 @@ export const CurrentSetForm = ({
     // row stays pending — next online/visibility event retries.
     void drainQueue();
 
-    setNextSetNumber((n) => n + 1);
+    setLastLogged(set_number);
     setSubmitting(false);
   };
 

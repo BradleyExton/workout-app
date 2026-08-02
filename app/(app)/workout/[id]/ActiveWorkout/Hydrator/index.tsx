@@ -115,50 +115,82 @@ export const Hydrator = ({
   // One-shot: seed Dexie from the server snapshot so a fresh device picks
   // up the active workout. Idempotent — subsequent live-queries keep
   // Dexie as the source of truth.
+  //
+  // Fill-only, never overwrite. This snapshot is not necessarily fresh:
+  // offline, the service worker serves a document it cached earlier, so
+  // `server` can be minutes or hours behind the sets sitting in Dexie
+  // waiting to drain. Writing it over local rows would silently revert
+  // the user's own work. The single exception is a finish, which is
+  // monotonic and may have happened on another device.
   useEffect(() => {
     const seed = async (): Promise<void> => {
       const db = getDb();
-      if (server.workout) await db.workouts.put({
-        id: server.workout.id,
-        user_id: "",
-        started_at: server.workout.started_at,
-        finished_at: server.workout.finished_at,
-        notes: null,
-        created_at: server.workout.started_at,
-      });
+
+      if (server.workout) {
+        const local = await db.workouts.get(server.workout.id);
+        await db.workouts.put({
+          id: server.workout.id,
+          user_id: local?.user_id ?? "",
+          started_at: local?.started_at ?? server.workout.started_at,
+          finished_at: local?.finished_at ?? server.workout.finished_at,
+          notes: local?.notes ?? null,
+          created_at: local?.created_at ?? server.workout.started_at,
+        });
+      }
+
       if (server.workoutExercises.length > 0) {
-        await db.workout_exercises.bulkPut(
-          server.workoutExercises.map((we) => ({
+        const known = await db.workout_exercises.bulkGet(
+          server.workoutExercises.map((we) => we.id),
+        );
+        const present = new Set(
+          known.filter((row) => row !== undefined).map((row) => row.id),
+        );
+        const missing = server.workoutExercises
+          .filter((we) => !present.has(we.id))
+          .map((we) => ({
             id: we.id,
             workout_id: workoutId,
             exercise_id: we.exercise_id,
             position: we.position,
             exercise_name: we.exercise?.name,
             exercise_primary_muscle: we.exercise?.primary_muscle,
-          })),
-        );
+          }));
+        if (missing.length > 0) await db.workout_exercises.bulkAdd(missing);
       }
+
       if (server.sets.length > 0) {
-        await db.sets.bulkPut(
-          server.sets.map((s) => ({
+        const known = await db.sets.bulkGet(server.sets.map((s) => s.id));
+        const present = new Set(
+          known.filter((row) => row !== undefined).map((row) => row.id),
+        );
+        const missing = server.sets
+          .filter((s) => !present.has(s.id))
+          .map((s) => ({
             id: s.id,
             workout_exercise_id: s.workout_exercise_id,
             set_number: s.set_number,
             weight_kg: s.weight_kg,
             reps: s.reps,
-            completed_at: server.workout?.started_at ?? new Date().toISOString(),
-          })),
-        );
+            completed_at:
+              server.workout?.started_at ?? new Date().toISOString(),
+          }));
+        if (missing.length > 0) await db.sets.bulkAdd(missing);
       }
     };
     void seed();
   }, [workoutId, server]);
 
+  // `?? null` matters: it makes `undefined` mean "Dexie hasn't answered
+  // yet" and `null` mean "no such workout here". Without the distinction
+  // the first paint of an offline reopen — server snapshot empty, Dexie
+  // still opening — flashes "Workout not found" at someone whose sets are
+  // sitting safely in IndexedDB.
   const dexieWorkout = useLiveQuery(
-    () => getDb().workouts.get(workoutId),
+    async () => (await getDb().workouts.get(workoutId)) ?? null,
     [workoutId],
     undefined,
   );
+  const dexiePending = dexieWorkout === undefined;
 
   const dexieExercises = useLiveQuery(
     () =>
@@ -283,6 +315,12 @@ export const Hydrator = ({
   useEffect(() => {
     if (staleFinished) router.replace("/");
   }, [staleFinished, router]);
+
+  // Nothing from the server and Dexie still opening: wait rather than
+  // accuse. This is the normal first frame of an offline reopen.
+  if (!merged.workout && dexiePending) {
+    return <main className={styles.empty} />;
+  }
 
   if (!merged.workout) {
     return (

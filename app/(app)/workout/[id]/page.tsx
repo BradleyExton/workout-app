@@ -1,9 +1,20 @@
 import type { JSX } from "react";
+import { CacheWarmer } from "@/components/system/CacheWarmer";
 import { createClient } from "@/lib/supabase/server";
 import type { MuscleGroup } from "@/lib/db/types";
 import { Hydrator, type ServerSnapshot } from "./ActiveWorkout/Hydrator";
 
 type Params = { id: string };
+
+// The routes a lifter mid-session can still need with no signal: this
+// workout (relaunching the PWA into it), the picker for the next
+// exercise, and home. The service worker caches each document while we
+// are online so those navigations don't dead-end on /offline.
+const offlineRoutes = (id: string): string[] => [
+  `/workout/${id}`,
+  `/workout/new?from=${id}`,
+  "/",
+];
 
 export default async function ActiveWorkoutPage({
   params,
@@ -34,11 +45,14 @@ export default async function ActiveWorkoutPage({
       prs: [],
     };
     return (
-      <Hydrator
-        workoutId={id}
-        server={empty}
-        initialCurrentWeId={initialCurrentWeId}
-      />
+      <>
+        <CacheWarmer urls={offlineRoutes(id)} />
+        <Hydrator
+          workoutId={id}
+          server={empty}
+          initialCurrentWeId={initialCurrentWeId}
+        />
+      </>
     );
   }
 
@@ -154,10 +168,13 @@ export default async function ActiveWorkoutPage({
   };
 
   return (
-    <Hydrator
-      workoutId={id}
-      server={snapshot}
-      initialCurrentWeId={initialCurrentWeId}
-    />
+    <>
+      <CacheWarmer urls={offlineRoutes(id)} />
+      <Hydrator
+        workoutId={id}
+        server={snapshot}
+        initialCurrentWeId={initialCurrentWeId}
+      />
+    </>
   );
 }
