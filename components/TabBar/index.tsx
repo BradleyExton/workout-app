@@ -3,10 +3,9 @@
 import type { JSX } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isTabBarVisible } from "./config";
 import { tabBarCopy } from "./copy";
 import * as styles from "./styles";
-
-const HIDDEN_PREFIXES = ["/workout", "/cardio"] as const;
 
 const HomeIcon = (): JSX.Element => (
   <svg
@@ -70,7 +69,8 @@ const isActive = (pathname: string, href: string): boolean => {
 
 export const TabBar = (): JSX.Element | null => {
   const pathname = usePathname();
-  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+  // Same predicate drives the CTA clearance — see components/TabBar/config.
+  if (!isTabBarVisible(pathname)) return null;
 
   return (
     <nav className={styles.nav} aria-label={tabBarCopy.ariaLabel}>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Timer } from "@/components/workout/Timer";
 import * as buttonStyles from "@/components/ui/Button/styles";
+import { CtaZone } from "@/components/ui/CtaZone";
+import * as ctaStyles from "@/components/ui/CtaZone/styles";
 import { useSessionClock } from "@/lib/hooks/useSessionClock";
 import type { MuscleGroup } from "@/lib/db/types";
 import { formatWeight } from "@/lib/format/weight";
@@ -327,15 +329,15 @@ export const ActiveWorkout = ({
             </Link>
           </div>
 
-          <div className={styles.ctaZone}>
+          <CtaZone>
             <button
               type="submit"
               form={CURRENT_SET_FORM_ID}
-              className={`${styles.ctaInner} ${buttonStyles.variant.pulse}`}
+              className={`${ctaStyles.inner} ${buttonStyles.variant.pulse}`}
             >
               {activeWorkoutCopy.logSet}
             </button>
-          </div>
+          </CtaZone>
         </>
       ) : (
         <div className={styles.emptyBlock}>

@@ -6,6 +6,7 @@ import {
   isAchievementSlug,
   nearestLockedAchievement,
 } from "@/lib/domain/achievements";
+import { InstallAppRow } from "./InstallAppRow";
 import { LogoutButton } from "./LogoutButton";
 import { profileCopy } from "./copy";
 import * as styles from "./styles";
@@ -252,6 +253,8 @@ export default async function ProfilePage(): Promise<JSX.Element> {
           </ul>
         )}
       </Card>
+
+      <InstallAppRow />
 
       <div className={styles.signOutZone}>
         <LogoutButton />

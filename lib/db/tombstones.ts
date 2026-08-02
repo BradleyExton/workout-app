@@ -28,6 +28,11 @@ export type LocalWorkoutClosures = {
   // it (sets still counted in home metrics) are stale too. A *finished*
   // workout keeps its rows, so it must not be filtered out this way.
   discarded: Set<string>;
+  // Finished only — the other half of `closed`. A finish is an
+  // achievement the server hasn't heard about yet; the onboarding card
+  // reads this so it stops greeting a user who banked their first
+  // session offline.
+  finished: Set<string>;
 };
 
 const CLOSING_OPS = new Set(["finishWorkout", "discardWorkout"]);
@@ -40,6 +45,7 @@ export const localWorkoutClosures =
 
     const closed = new Set<string>();
     const discarded = new Set<string>();
+    const finished = new Set<string>();
     for (const op of ops) {
       const { workout_id } = op.payload as
         | FinishWorkoutPayload
@@ -47,8 +53,9 @@ export const localWorkoutClosures =
       if (!workout_id) continue;
       closed.add(workout_id);
       if (op.type === "discardWorkout") discarded.add(workout_id);
+      else finished.add(workout_id);
     }
-    return { closed, discarded };
+    return { closed, discarded, finished };
   };
 
 // Single-id variant for the active-workout page. Scans the same table so

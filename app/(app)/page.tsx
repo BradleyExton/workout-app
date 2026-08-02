@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { CtaZone } from "@/components/ui/CtaZone";
 import { createClient } from "@/lib/supabase/server";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
 import { type MuscleGroup } from "@/lib/db/types";
@@ -39,6 +40,8 @@ export default async function HomePage(): Promise<JSX.Element> {
     { data: finishedWorkouts },
     { data: rawCardio },
     { data: recentUnlocks },
+    { count: finishedWorkoutCount },
+    { count: cardioCount },
   ] = await Promise.all([
     supabase
       .from("workouts")
@@ -67,6 +70,14 @@ export default async function HomePage(): Promise<JSX.Element> {
       .select("unlocked_at, achievement:achievements!inner(slug, title, icon)")
       .order("unlocked_at", { ascending: false })
       .limit(3),
+    // Lifetime, not windowed: the onboarding card asks "has this account ever
+    // finished anything?", and the 30/60-day slices above would answer "no"
+    // for a returning user and greet them as brand new.
+    supabase
+      .from("workouts")
+      .select("id", { count: "exact", head: true })
+      .not("finished_at", "is", null),
+    supabase.from("cardio_sessions").select("id", { count: "exact", head: true }),
   ]);
 
   type RawSetRow = {
@@ -125,12 +136,6 @@ export default async function HomePage(): Promise<JSX.Element> {
 
   const now = currentDate();
 
-  const isFreshAccount =
-    workoutStartedAts.length === 0 &&
-    flatSets.length === 0 &&
-    cardioSessions.length === 0 &&
-    !activeWorkout;
-
   const headerDate = formatHeaderDate(now);
   const displayName = deriveName(user?.email);
 
@@ -143,7 +148,12 @@ export default async function HomePage(): Promise<JSX.Element> {
         </h1>
       </div>
 
-      {isFreshAccount && <HomeOnboarding />}
+      <HomeOnboarding
+        serverHasHistory={
+          (finishedWorkoutCount ?? 0) > 0 || (cardioCount ?? 0) > 0
+        }
+        serverActiveWorkoutId={activeWorkout?.id ?? null}
+      />
 
       <HomeMetrics
         serverFlatSets={flatSets}
@@ -161,9 +171,9 @@ export default async function HomePage(): Promise<JSX.Element> {
 
       <InstallPrompt />
 
-      <div className={styles.ctaZone}>
+      <CtaZone>
         <ResumeCta serverActive={activeWorkout ?? null} />
-      </div>
+      </CtaZone>
     </main>
   );
 }

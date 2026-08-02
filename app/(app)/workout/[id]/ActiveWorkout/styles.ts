@@ -1,4 +1,5 @@
-export const page = "flex min-h-dvh flex-col gap-3 px-4 pb-44 pt-4";
+// pb clears the fixed CTA strip only — no tab bar renders on /workout/*.
+export const page = "flex min-h-dvh flex-col gap-3 px-4 pb-30 pt-4";
 
 export const topBar = "flex items-center justify-between";
 export const back = "kicker text-dust px-2 py-1.5";
@@ -68,7 +69,3 @@ export const addExerciseBtn =
 
 export const empty = "text-sm font-semibold text-dust text-center pt-8";
 export const emptyBlock = "flex flex-col gap-4 px-2";
-
-export const ctaZone =
-  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
-export const ctaInner = "pointer-events-auto";

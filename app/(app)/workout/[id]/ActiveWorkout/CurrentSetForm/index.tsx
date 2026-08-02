@@ -106,7 +106,15 @@ export const CurrentSetForm = ({
 
   return (
     <div className={styles.card}>
-      <form id={formId} onSubmit={onSubmit} noValidate>
+      {/* method="dialog" is the no-JS guard, not a dialog thing: the submit
+          button lives outside this form (it's in the fixed CTA strip) and a
+          tap that lands before hydration would otherwise run the *native*
+          submission — a GET reload of the workout screen with the set fields
+          in the query string. With method="dialog" and no <dialog> ancestor
+          the browser fires the submit event and then does nothing, so React's
+          handler still runs once hydrated and an early tap is merely
+          ignored. */}
+      <form id={formId} method="dialog" onSubmit={onSubmit} noValidate>
         <div className={styles.header}>
           <span className={styles.setNumber}>{nextSetNumber}</span>
           <span className={styles.label}>{currentSetCopy.currentSetLabel}</span>

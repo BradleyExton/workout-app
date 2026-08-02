@@ -1,4 +1,7 @@
-export const page = "flex min-h-dvh flex-col gap-4 px-4 pt-4 pb-44";
+// pb clears the fixed CTA strip (pt-7 + a 3.5rem button + pb-4) and no
+// more — the tab bar is not rendered on this route, so nothing else is
+// down there. See components/ui/CtaZone.
+export const page = "flex min-h-dvh flex-col gap-4 px-4 pt-4 pb-30";
 export const back = "self-start kicker text-dust px-2 py-1.5";
 export const title = "display text-3xl leading-none";
 
@@ -28,10 +31,6 @@ export const timeField =
 // affordance) on the dark palette instead of a white system sheet.
 export const timeInput =
   "display text-2xl text-glow bg-transparent outline-none text-right [color-scheme:dark] [&::-webkit-date-and-time-value]:text-right";
-
-export const ctaZone =
-  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
-export const ctaInner = "pointer-events-auto";
 
 export const doneCard =
   "w-full rounded-full border border-pulse/40 bg-pulse/15 py-3 flex items-center justify-center gap-2";

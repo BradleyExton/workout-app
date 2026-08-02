@@ -4,6 +4,8 @@ import { useState, useTransition, type FormEvent, type JSX } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as buttonStyles from "@/components/ui/Button/styles";
+import { CtaZone } from "@/components/ui/CtaZone";
+import * as ctaStyles from "@/components/ui/CtaZone/styles";
 import { getDb } from "@/lib/db/dexie";
 import { newId } from "@/lib/db/ids";
 import { drainQueue, enqueue, type LogCardioPayload } from "@/lib/db/queue";
@@ -129,7 +131,21 @@ export const LogCardioForm = (): JSX.Element => {
       </Link>
       <h1 className={styles.title}>{cardioFormCopy.title}</h1>
 
-      <form id={FORM_ID} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      {/* method="dialog" is the no-JS guard, not a dialog thing: the submit
+          button lives outside this form (it's in the fixed CTA strip) and a
+          tap that lands before hydration would otherwise run the *native*
+          submission — a GET reload of this screen with the typed values in
+          the query string, where nothing reads them. With method="dialog"
+          and no <dialog> ancestor the browser fires the submit event and
+          then does nothing, so React's handler still runs once hydrated and
+          an early tap is merely ignored. */}
+      <form
+        id={FORM_ID}
+        method="dialog"
+        onSubmit={onSubmit}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         <p className={styles.sectionLabel}>{cardioFormCopy.modalityLabel}</p>
         <div className={styles.chipRow}>
           {MODALITIES.map((value) => {
@@ -236,9 +252,9 @@ export const LogCardioForm = (): JSX.Element => {
         )}
       </form>
 
-      <div className={styles.ctaZone}>
+      <CtaZone>
         {phase === "done" ? (
-          <div className={`${styles.ctaInner} ${styles.doneCard}`} role="status">
+          <div className={`${ctaStyles.inner} ${styles.doneCard}`} role="status">
             <span className={styles.doneTitle}>{cardioFormCopy.doneTitle}</span>
             <span className={styles.doneSummary}>{summary}</span>
           </div>
@@ -246,14 +262,14 @@ export const LogCardioForm = (): JSX.Element => {
           <button
             type="submit"
             form={FORM_ID}
-            className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
+            className={`${ctaStyles.inner} ${buttonStyles.variant.primary}`}
             disabled={phase !== "idle"}
             aria-busy={phase === "saving"}
           >
             {phase === "saving" ? cardioFormCopy.saving : cardioFormCopy.submit}
           </button>
         )}
-      </div>
+      </CtaZone>
     </main>
   );
 };
