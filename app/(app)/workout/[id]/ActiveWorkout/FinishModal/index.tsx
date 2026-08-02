@@ -39,8 +39,21 @@ export const FinishModal = ({
 }: FinishModalProps): JSX.Element => {
   const [, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const [drainFailed, setDrainFailed] = useState(false);
   const router = useRouter();
+
+  const isEmpty = setsCount === 0;
+  const busy = saving || discarding;
+
+  // Re-opening the modal always starts from the non-confirming state
+  // (state adjustment during render, per React docs, not an effect).
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (!open) setConfirmingDiscard(false);
+  }
 
   const onFinish = (): void => {
     // Outside the transition: once the Dexie write lands, the Hydrator
@@ -100,6 +113,7 @@ export const FinishModal = ({
   };
 
   const onDiscard = (): void => {
+    setDiscarding(true);
     startTransition(async () => {
       const db = getDb();
       await db.transaction(
@@ -127,7 +141,7 @@ export const FinishModal = ({
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={onClose} locked={busy}>
       <div className={styles.header}>
         <div>
           <p className={styles.kicker}>{finishModalCopy.kicker}</p>
@@ -138,7 +152,7 @@ export const FinishModal = ({
           aria-label={finishModalCopy.closeLabel}
           className={styles.closeBtn}
           onClick={onClose}
-          disabled={saving}
+          disabled={busy}
         >
           ×
         </button>
@@ -161,36 +175,94 @@ export const FinishModal = ({
         </div>
       </div>
 
-      <button
-        type="button"
-        className={`${buttonStyles.variant.primary} ${styles.primaryCta}`}
-        onClick={drainFailed ? onContinue : onFinish}
-        disabled={saving}
-        aria-busy={saving}
-        aria-label={saving ? finishModalCopy.savingAria : undefined}
-      >
-        {saving
-          ? finishModalCopy.saving
-          : drainFailed
-            ? finishModalCopy.continueOffline
-            : finishModalCopy.finishAndSave}
-      </button>
+      {isEmpty ? (
+        // Nothing was logged: discarding is the safe default, and it
+        // needs no confirmation because there's nothing to lose.
+        <>
+          <button
+            type="button"
+            className={`${buttonStyles.variant.primary} ${styles.primaryCta}`}
+            onClick={onDiscard}
+            disabled={busy}
+            aria-busy={discarding}
+          >
+            {discarding
+              ? finishModalCopy.discarding
+              : finishModalCopy.discardEmpty}
+          </button>
+          <button
+            type="button"
+            className={styles.discardBtn}
+            onClick={drainFailed ? onContinue : onFinish}
+            disabled={busy}
+          >
+            {saving
+              ? finishModalCopy.saving
+              : drainFailed
+                ? finishModalCopy.continueOffline
+                : finishModalCopy.saveEmpty}
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className={`${buttonStyles.variant.primary} ${styles.primaryCta}`}
+            onClick={drainFailed ? onContinue : onFinish}
+            disabled={busy}
+            aria-busy={saving}
+            aria-label={saving ? finishModalCopy.savingAria : undefined}
+          >
+            {saving
+              ? finishModalCopy.saving
+              : drainFailed
+                ? finishModalCopy.continueOffline
+                : finishModalCopy.finishAndSave}
+          </button>
+
+          {!drainFailed &&
+            (confirmingDiscard ? (
+              <div className={styles.discardConfirmBlock}>
+                <p className={styles.discardConfirmText}>
+                  {finishModalCopy.discardConfirmBody(setsCount)}
+                </p>
+                <button
+                  type="button"
+                  className={styles.discardConfirmBtn}
+                  onClick={onDiscard}
+                  disabled={busy}
+                  aria-busy={discarding}
+                >
+                  {discarding
+                    ? finishModalCopy.discarding
+                    : finishModalCopy.discardConfirmCta}
+                </button>
+                <button
+                  type="button"
+                  className={styles.discardBtn}
+                  onClick={() => setConfirmingDiscard(false)}
+                  disabled={busy}
+                >
+                  {finishModalCopy.discardCancel}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className={styles.discardBtn}
+                onClick={() => setConfirmingDiscard(true)}
+                disabled={busy}
+              >
+                {finishModalCopy.discard}
+              </button>
+            ))}
+        </>
+      )}
 
       {drainFailed && (
         <p role="alert" className={styles.drainErrorRow}>
           {finishModalCopy.drainFailed}
         </p>
-      )}
-
-      {!drainFailed && (
-        <button
-          type="button"
-          className={styles.discardBtn}
-          onClick={onDiscard}
-          disabled={saving}
-        >
-          {finishModalCopy.discard}
-        </button>
       )}
     </Modal>
   );

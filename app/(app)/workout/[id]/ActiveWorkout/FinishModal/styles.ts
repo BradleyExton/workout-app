@@ -13,7 +13,13 @@ export const divider = "w-px h-8 bg-edge";
 
 export const primaryCta = "mt-4";
 export const discardBtn =
-  "mt-2 w-full text-center py-2 text-xs font-extrabold uppercase tracking-widest text-plasma-pink";
+  "mt-2 w-full text-center py-2 text-xs font-extrabold uppercase tracking-widest text-plasma-pink disabled:opacity-50";
+
+export const discardConfirmBlock =
+  "mt-3 rounded-xl border border-plasma-pink/40 bg-plasma-pink/10 px-3 py-3 flex flex-col gap-2";
+export const discardConfirmText = "text-xs font-semibold leading-snug";
+export const discardConfirmBtn =
+  "w-full rounded-full border border-plasma-pink/60 bg-plasma-pink/20 text-plasma-pink py-2.5 text-xs font-extrabold uppercase tracking-widest disabled:opacity-50";
 
 export const drainErrorRow =
   "mt-3 rounded-xl border border-plasma-pink/40 bg-plasma-pink/10 px-3 py-2 text-xs font-semibold leading-snug";

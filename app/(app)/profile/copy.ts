@@ -7,8 +7,8 @@ export const profileCopy = {
   xpValue: (current: number, next: number): string =>
     `${current} / ${next} XP`,
   xpPreviewNote: "Preview — XP tracking lands in a later update",
-  statWorkouts: "Workouts",
-  statCardio: "Cardio",
+  statWorkouts: "Workouts · all time",
+  statCardio: "Cardio · all time",
   statBadges: "Badges",
   trophyCase: (unlocked: number, total: number): string =>
     `Trophy case · ${unlocked} / ${total}`,

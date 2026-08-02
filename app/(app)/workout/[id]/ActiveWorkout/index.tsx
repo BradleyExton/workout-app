@@ -70,6 +70,7 @@ type ActiveWorkoutProps = {
   todayItems: TodayItem[];
   stats: { sets: number; exercises: number; volume: number };
   finishFlow: FinishFlow;
+  onSelectExercise: (weId: string) => void;
 };
 
 export const ActiveWorkout = ({
@@ -82,7 +83,9 @@ export const ActiveWorkout = ({
   todayItems,
   stats,
   finishFlow,
+  onSelectExercise,
 }: ActiveWorkoutProps): JSX.Element => {
+  const addExerciseHref = `/workout/new?from=${workout.id}`;
   const startedAtMs = new Date(workout.started_at).getTime();
   const nextSetNumber = (currentSets.at(-1)?.set_number ?? 0) + 1;
 
@@ -138,20 +141,22 @@ export const ActiveWorkout = ({
                 {current.exercise.primary_muscle}
               </span>
               <span className={styles.setLabel}>
-                {activeWorkoutCopy.currentSetLabel(
-                  nextSetNumber,
-                  targetSets ?? undefined,
-                )}
+                {activeWorkoutCopy.currentSetLabel(nextSetNumber)}
               </span>
             </div>
             <h2 className={styles.exerciseName}>{current.exercise.name}</h2>
           </Card>
 
-          {progressPct !== null && (
+          {progressPct !== null && targetSets !== null && (
             <div className={styles.progressBlock}>
               <div className={styles.progressLabelRow}>
                 <span>{activeWorkoutCopy.progressLabel}</span>
-                <span>{activeWorkoutCopy.progressPct(progressPct)}</span>
+                <span>
+                  {activeWorkoutCopy.progressValue(
+                    currentSets.length,
+                    targetSets,
+                  )}
+                </span>
               </div>
               <div className={styles.progressTrack}>
                 <div
@@ -237,6 +242,9 @@ export const ActiveWorkout = ({
             <SetList sets={currentSets} prFlags={setPrFlags} />
 
             <CurrentSetForm
+              // Remount when the exercise changes AND when last-session
+              // data arrives — the prefill defaults are captured at mount.
+              key={`${current.id}:${lastSession ? "prev" : "fresh"}`}
               workoutExerciseId={current.id}
               initialSetNumber={nextSetNumber}
               defaults={defaults}
@@ -268,20 +276,29 @@ export const ActiveWorkout = ({
                 <p className={styles.todayLabel}>{activeWorkoutCopy.todayLabel}</p>
                 <div className={styles.todayList}>
                   {todayItems.map((item) => (
-                    <Card key={item.id} size="sm" className={styles.todayRow}>
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={styles.todayRow}
+                      onClick={() => onSelectExercise(item.id)}
+                      aria-label={activeWorkoutCopy.todayRowLabel(item.name)}
+                    >
                       <span className={styles.todayName}>{item.name}</span>
                       <span className={styles.todayStats}>
-                        {item.setCount} ×{" "}
+                        {activeWorkoutCopy.todaySetCount(item.setCount)}
                         {item.lastWeight !== null
-                          ? formatWeight(item.lastWeight)
-                          : "—"}
+                          ? ` · ${formatWeight(item.lastWeight)} kg`
+                          : ""}
                       </span>
-                    </Card>
+                      <span className={styles.todayChevron} aria-hidden>
+                        ›
+                      </span>
+                    </button>
                   ))}
                 </div>
               </>
             )}
-            <Link className={styles.addExerciseBtn} href="/workout/new">
+            <Link className={styles.addExerciseBtn} href={addExerciseHref}>
               {activeWorkoutCopy.addExercise}
             </Link>
           </div>
@@ -297,7 +314,12 @@ export const ActiveWorkout = ({
           </div>
         </>
       ) : (
-        <p className={styles.empty}>{activeWorkoutCopy.emptyHint}</p>
+        <div className={styles.emptyBlock}>
+          <p className={styles.empty}>{activeWorkoutCopy.emptyHint}</p>
+          <Link className={styles.addExerciseBtn} href={addExerciseHref}>
+            {activeWorkoutCopy.addExercise}
+          </Link>
+        </div>
       )}
     </main>
   );

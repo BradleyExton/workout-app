@@ -23,6 +23,11 @@ export const ctaZone =
   "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
 export const ctaInner = "pointer-events-auto";
 
+export const doneCard =
+  "w-full rounded-full border border-pulse/40 bg-pulse/15 py-3 flex items-center justify-center gap-2";
+export const doneTitle = "text-pulse text-sm font-extrabold tracking-widest";
+export const doneSummary = "text-xs font-bold text-dust";
+
 // Ring, not border: a second border-color utility would conflict with
 // card-volt-sm's border-edge.
 export const fieldError = "ring-2 ring-plasma-pink";

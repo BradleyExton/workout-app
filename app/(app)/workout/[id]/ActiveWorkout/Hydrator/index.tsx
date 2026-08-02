@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getDb } from "@/lib/db/dexie";
-import type { LogSetPayload } from "@/lib/db/queue";
+import type {
+  DeleteSetPayload,
+  LogSetPayload,
+  UpdateSetPayload,
+} from "@/lib/db/queue";
 import type { MuscleGroup } from "@/lib/db/types";
 import { computePrFlags, type PrType, type SetForPr } from "@/lib/domain/pr";
 import type { WorkoutUnlocks } from "../../actions";
@@ -70,6 +74,9 @@ export type ServerSnapshot = {
 type HydratorProps = {
   workoutId: string;
   server: ServerSnapshot;
+  // Deep-linked current exercise (?we=): the picker passes it when the
+  // user re-picks an exercise that's already in this workout.
+  initialCurrentWeId?: string | null;
 };
 
 type MergedWE = {
@@ -80,11 +87,20 @@ type MergedWE = {
 
 type MergedSet = ServerSet & { pending: boolean };
 
-export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
+export const Hydrator = ({
+  workoutId,
+  server,
+  initialCurrentWeId = null,
+}: HydratorProps): JSX.Element => {
   const router = useRouter();
   const [finishState, setFinishState] = useState<FinishState>({
     phase: "idle",
   });
+  // Which exercise the set form targets. Defaults to the last-added one;
+  // Today rows and the picker's ?we= deep link can retarget it.
+  const [selectedWeId, setSelectedWeId] = useState<string | null>(
+    initialCurrentWeId,
+  );
   const finishFlow = useMemo<FinishFlow>(
     () => ({
       onStart: () => setFinishState({ phase: "finishing" }),
@@ -173,12 +189,28 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
     async () => {
       const ops = await getDb()
         .pending_ops.filter(
-          (op) => op.synced_at === null && op.type === "logSet",
+          (op) =>
+            op.synced_at === null &&
+            (op.type === "logSet" || op.type === "updateSet"),
         )
         .toArray();
       return new Set(
-        ops.map((op) => (op.payload as LogSetPayload).id),
+        ops.map((op) => (op.payload as LogSetPayload | UpdateSetPayload).id),
       );
+    },
+    [],
+    new Set<string>(),
+  );
+
+  // Tombstones: a set deleted locally must not be resurrected by the
+  // (stale) server snapshot. Includes synced ops — they linger for 24h,
+  // long past the next server render.
+  const deletedSetIds = useLiveQuery(
+    async () => {
+      const ops = await getDb()
+        .pending_ops.filter((op) => op.type === "deleteSet")
+        .toArray();
+      return new Set(ops.map((op) => (op.payload as DeleteSetPayload).id));
     },
     [],
     new Set<string>(),
@@ -237,10 +269,10 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
         pending: pendingSetIds.has(s.id),
       });
     }
-    const sets = [...setById.values()];
+    const sets = [...setById.values()].filter((s) => !deletedSetIds.has(s.id));
 
     return { workout, workoutExercises, sets };
-  }, [server, dexieWorkout, dexieExercises, dexieSets, pendingSetIds]);
+  }, [server, dexieWorkout, dexieExercises, dexieSets, pendingSetIds, deletedSetIds]);
 
   // Finished workouts shouldn't render the active page. Server-side this
   // would have been a redirect; here we mirror it once Dexie reports
@@ -278,7 +310,12 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
     arr.sort((a, b) => a.set_number - b.set_number);
   }
 
-  const current = merged.workoutExercises.at(-1) ?? null;
+  const current =
+    (selectedWeId
+      ? merged.workoutExercises.find((we) => we.id === selectedWeId)
+      : null) ??
+    merged.workoutExercises.at(-1) ??
+    null;
   const currentSets = current ? (setsByExercise.get(current.id) ?? []) : [];
 
   const lastSession =
@@ -376,6 +413,7 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
         volume: totalVolume,
       }}
       finishFlow={finishFlow}
+      onSelectExercise={setSelectedWeId}
     />
   );
 };

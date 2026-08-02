@@ -1,5 +1,5 @@
 export const finishModalCopy = {
-  kicker: "Done here?",
+  kicker: "Wrap-up",
   title: "END\nWORKOUT?",
   closeLabel: "Close",
   statTime: "Time",
@@ -7,6 +7,13 @@ export const finishModalCopy = {
   statVolume: "Volume",
   finishAndSave: "FINISH & SAVE →",
   discard: "Discard workout",
+  discardConfirmBody: (sets: number): string =>
+    `Delete ${sets} logged ${sets === 1 ? "set" : "sets"}? This can't be undone.`,
+  discardConfirmCta: "YES, DELETE WORKOUT",
+  discardCancel: "Keep training",
+  discarding: "Deleting…",
+  discardEmpty: "DISCARD EMPTY WORKOUT",
+  saveEmpty: "Save it anyway",
   saving: "Saving...",
   savingAria: "Saving workout",
   drainFailed:

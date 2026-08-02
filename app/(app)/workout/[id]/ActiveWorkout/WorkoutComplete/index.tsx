@@ -23,6 +23,32 @@ const formatPrValue = (
   return `${formatWeight(value)} kg`;
 };
 
+// One PR line per exercise: a single strong set can mint 1RM + volume +
+// reps records at once, and listing all of them buries the signal. Show
+// the most meaningful one (1RM > volume > reps) and count the rest.
+const PR_PRIORITY: Record<"1rm" | "volume" | "reps", number> = {
+  "1rm": 0,
+  volume: 1,
+  reps: 2,
+};
+
+type PrLine = WorkoutUnlocks["newPrs"][number] & { extraCount: number };
+
+const dedupePrs = (prs: WorkoutUnlocks["newPrs"]): PrLine[] => {
+  const byExercise = new Map<string, WorkoutUnlocks["newPrs"]>();
+  for (const pr of prs) {
+    const list = byExercise.get(pr.exercise_name) ?? [];
+    list.push(pr);
+    byExercise.set(pr.exercise_name, list);
+  }
+  return [...byExercise.values()].map((list) => {
+    const sorted = [...list].sort(
+      (a, b) => PR_PRIORITY[a.pr_type] - PR_PRIORITY[b.pr_type],
+    );
+    return { ...sorted[0], extraCount: sorted.length - 1 };
+  });
+};
+
 export const WorkoutComplete = ({
   setsCount,
   volume,
@@ -64,7 +90,7 @@ export const WorkoutComplete = ({
 
         {unlocks.newPrs.length > 0 && (
           <div className={styles.prCard}>
-            {unlocks.newPrs.map((pr, i) => (
+            {dedupePrs(unlocks.newPrs).map((pr, i) => (
               <div key={`pr-${i}`} className={styles.prRow}>
                 <span className={styles.prTag}>
                   {workoutCompleteCopy.newPrLabel}
@@ -73,6 +99,8 @@ export const WorkoutComplete = ({
                   {pr.exercise_name} ·{" "}
                   {workoutCompleteCopy.prTypeLabel[pr.pr_type]}{" "}
                   {formatPrValue(pr.pr_type, pr.value)}
+                  {pr.extraCount > 0 &&
+                    ` ${workoutCompleteCopy.prExtra(pr.extraCount)}`}
                 </span>
               </div>
             ))}

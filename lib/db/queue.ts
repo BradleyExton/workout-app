@@ -12,6 +12,8 @@ import {
 } from "@/app/(app)/workout/new/actions";
 import {
   logSet as logSetAction,
+  updateSet as updateSetAction,
+  deleteSet as deleteSetAction,
   finishWorkout as finishWorkoutAction,
   discardWorkout as discardWorkoutAction,
 } from "@/app/(app)/workout/[id]/actions";
@@ -46,6 +48,16 @@ export type LogSetPayload = {
   set_number: number;
   weight_kg: number;
   reps: number;
+};
+
+export type UpdateSetPayload = {
+  id: string;
+  weight_kg: number;
+  reps: number;
+};
+
+export type DeleteSetPayload = {
+  id: string;
 };
 
 export type FinishWorkoutPayload = {
@@ -181,6 +193,22 @@ const dispatchOp = async (item: QueueItem): Promise<void> => {
         // by bumping. Patch the Dexie row so the merge stays consistent.
         await getDb().sets.update(p.id, { set_number: result.set_number });
       }
+      return;
+    }
+    case "updateSet": {
+      const p = item.payload as UpdateSetPayload;
+      const fd = new FormData();
+      fd.append("id", p.id);
+      fd.append("weight_kg", String(p.weight_kg));
+      fd.append("reps", String(p.reps));
+      await updateSetAction(fd);
+      return;
+    }
+    case "deleteSet": {
+      const p = item.payload as DeleteSetPayload;
+      const fd = new FormData();
+      fd.append("id", p.id);
+      await deleteSetAction(fd);
       return;
     }
     case "finishWorkout": {

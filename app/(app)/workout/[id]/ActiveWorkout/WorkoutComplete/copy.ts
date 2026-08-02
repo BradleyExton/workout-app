@@ -10,6 +10,7 @@ export const workoutCompleteCopy = {
   breakdownVolume: "Volume",
   durationValue: (durationMin: number): string => `${durationMin} min`,
   newPrLabel: "NEW PR",
+  prExtra: (n: number): string => `(+${n} more)`,
   badgeDropKicker: "Badge drop",
   continueCta: "CONTINUE",
   prTypeLabel: {

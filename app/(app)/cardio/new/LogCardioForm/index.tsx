@@ -14,16 +14,20 @@ import * as styles from "./styles";
 const FORM_ID = "log-cardio-form";
 const MODALITIES: readonly CardioModality[] = ["walk", "run", "treadmill"];
 
+const REDIRECT_DELAY_MS = 1200;
+
 export const LogCardioForm = (): JSX.Element => {
   const [modality, setModality] = useState<CardioModality>("run");
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
   const [error, setError] = useState<"duration" | "distance" | null>(null);
+  const [phase, setPhase] = useState<"idle" | "saving" | "done">("idle");
   const [, startTransition] = useTransition();
   const router = useRouter();
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    if (phase !== "idle") return;
 
     const durationMin = Number(duration);
     if (duration.trim() === "" || !Number.isFinite(durationMin) || durationMin <= 0) {
@@ -41,6 +45,7 @@ export const LogCardioForm = (): JSX.Element => {
       distanceM = Math.round(km * 1000);
     }
     setError(null);
+    setPhase("saving");
 
     startTransition(async () => {
       const id = newId();
@@ -65,9 +70,18 @@ export const LogCardioForm = (): JSX.Element => {
       } satisfies LogCardioPayload);
 
       void drainQueue();
-      router.push("/");
+      // Brief on-screen confirmation before returning home — an instant
+      // teleport reads as "did that even save?".
+      setPhase("done");
+      setTimeout(() => router.push("/"), REDIRECT_DELAY_MS);
     });
   };
+
+  const summary = cardioFormCopy.doneSummary(
+    modalityLabel[modality],
+    distance.trim() === "" ? null : Number(distance),
+    Number(duration),
+  );
 
   return (
     <main className={styles.page}>
@@ -76,7 +90,7 @@ export const LogCardioForm = (): JSX.Element => {
       </Link>
       <h1 className={styles.title}>{cardioFormCopy.title}</h1>
 
-      <form id={FORM_ID} onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form id={FORM_ID} onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <p className={styles.sectionLabel}>{cardioFormCopy.modalityLabel}</p>
         <div className={styles.chipRow}>
           {MODALITIES.map((value) => {
@@ -127,7 +141,6 @@ export const LogCardioForm = (): JSX.Element => {
               inputMode="numeric"
               step="1"
               min="1"
-              required
               aria-invalid={error === "duration"}
               value={duration}
               onChange={(event) => {
@@ -149,13 +162,22 @@ export const LogCardioForm = (): JSX.Element => {
       </form>
 
       <div className={styles.ctaZone}>
-        <button
-          type="submit"
-          form={FORM_ID}
-          className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
-        >
-          {cardioFormCopy.submit}
-        </button>
+        {phase === "done" ? (
+          <div className={`${styles.ctaInner} ${styles.doneCard}`} role="status">
+            <span className={styles.doneTitle}>{cardioFormCopy.doneTitle}</span>
+            <span className={styles.doneSummary}>{summary}</span>
+          </div>
+        ) : (
+          <button
+            type="submit"
+            form={FORM_ID}
+            className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
+            disabled={phase !== "idle"}
+            aria-busy={phase === "saving"}
+          >
+            {phase === "saving" ? cardioFormCopy.saving : cardioFormCopy.submit}
+          </button>
+        )}
       </div>
     </main>
   );

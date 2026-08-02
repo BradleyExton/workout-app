@@ -62,6 +62,8 @@ export type PendingOpType =
   | "createWorkout"
   | "addExercise"
   | "logSet"
+  | "updateSet"
+  | "deleteSet"
   | "finishWorkout"
   | "discardWorkout"
   | "logCardio";

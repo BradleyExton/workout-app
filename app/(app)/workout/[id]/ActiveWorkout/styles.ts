@@ -11,7 +11,9 @@ export const finishBtn =
 
 export const hero = "p-4";
 export const heroRow = "flex items-center justify-between";
-export const groupBadge = "kicker rounded-full bg-void/25 px-2.5 py-1";
+// Plain text, not a pill: a chip reading "BACK" directly under the
+// "← Back" nav link reads as a second back button.
+export const groupBadge = "kicker opacity-80";
 export const setLabel = "text-[10px] font-extrabold tracking-widest";
 export const exerciseName = "display text-3xl leading-none mt-2";
 
@@ -50,13 +52,16 @@ export const statKey = "text-[9px] font-extrabold uppercase text-dust mt-1";
 export const todaySection = "mt-1";
 export const todayLabel = "kicker text-dust mb-2";
 export const todayList = "flex flex-col gap-2";
-export const todayRow = "px-2.5 py-2.5 flex items-center justify-between";
-export const todayName = "font-extrabold text-sm";
+export const todayRow =
+  "card-volt-sm w-full px-3 py-2.5 flex items-center gap-2 text-left active:scale-[0.98] transition-transform";
+export const todayName = "font-extrabold text-sm flex-1";
 export const todayStats = "text-[10px] font-bold text-dust";
+export const todayChevron = "text-dust font-extrabold text-lg leading-none";
 export const addExerciseBtn =
   "mt-2 block w-full border border-dashed border-edge rounded-xl py-3 text-xs font-extrabold uppercase tracking-widest text-dust text-center";
 
-export const empty = "text-sm font-semibold text-dust text-center py-8";
+export const empty = "text-sm font-semibold text-dust text-center pt-8";
+export const emptyBlock = "flex flex-col gap-4 px-2";
 
 export const ctaZone =
   "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";

@@ -7,18 +7,26 @@ import * as styles from "./styles";
 type ModalProps = {
   open: boolean;
   onClose: () => void;
+  // While locked (e.g. a save in flight), backdrop taps and Escape are
+  // ignored so dismissal can't cancel the operation mid-write.
+  locked?: boolean;
   children: React.ReactNode;
 };
 
-export const Modal = ({ open, onClose, children }: ModalProps): JSX.Element | null => {
+export const Modal = ({
+  open,
+  onClose,
+  locked = false,
+  children,
+}: ModalProps): JSX.Element | null => {
   useEffect(() => {
-    if (!open) return;
+    if (!open || locked) return;
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, locked, onClose]);
 
   if (!open) return null;
 
@@ -27,7 +35,7 @@ export const Modal = ({ open, onClose, children }: ModalProps): JSX.Element | nu
       className={styles.backdrop}
       role="dialog"
       aria-modal="true"
-      onClick={onClose}
+      onClick={locked ? undefined : onClose}
     >
       <div onClick={(event) => event.stopPropagation()}>
         <Card variant="muted" className={styles.card}>

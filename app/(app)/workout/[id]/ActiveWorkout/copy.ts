@@ -1,12 +1,14 @@
 export const activeWorkoutCopy = {
   back: "← Back",
   finish: "Finish",
-  emptyHint: "No exercises yet. Tap Add Exercise.",
-  currentSetLabel: (n: number, of?: number): string =>
-    of ? `SET ${n} OF ${of}` : `SET ${n}`,
+  emptyHint: "No exercises yet.",
+  currentSetLabel: (n: number): string => `SET ${n}`,
   setRowCheck: "✓",
-  progressLabel: "Exercise progress",
-  progressPct: (pct: number): string => `${pct}%`,
+  // Honest framing: the bar compares against last session's set count,
+  // not a prescribed plan.
+  progressLabel: "Sets vs last session",
+  progressValue: (done: number, target: number): string =>
+    `${done} / ${target}`,
   // TODO(xp): append the set's XP payout ("Complete set · +20 XP") once
   // the XP economy phase lands.
   logSet: "COMPLETE SET",
@@ -21,5 +23,7 @@ export const activeWorkoutCopy = {
   statSets: "Sets",
   statExercises: "Exercises",
   todayLabel: "Today",
+  todayRowLabel: (name: string): string => `Switch back to ${name}`,
+  todaySetCount: (n: number): string => `${n} ${n === 1 ? "set" : "sets"}`,
   addExercise: "+ Add exercise",
 } as const;

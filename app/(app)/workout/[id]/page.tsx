@@ -7,10 +7,16 @@ type Params = { id: string };
 
 export default async function ActiveWorkoutPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ we?: string | string[] }>;
 }): Promise<JSX.Element> {
   const { id } = await params;
+  // ?we={workoutExerciseId}: which exercise block to focus (set by the
+  // picker when resuming an exercise already in the workout).
+  const { we } = await searchParams;
+  const initialCurrentWeId = typeof we === "string" && we !== "" ? we : null;
   const supabase = await createClient();
 
   const { data: workout } = await supabase
@@ -27,7 +33,13 @@ export default async function ActiveWorkoutPage({
       lastSession: null,
       prs: [],
     };
-    return <Hydrator workoutId={id} server={empty} />;
+    return (
+      <Hydrator
+        workoutId={id}
+        server={empty}
+        initialCurrentWeId={initialCurrentWeId}
+      />
+    );
   }
 
   const { data: workoutExercises } = await supabase
@@ -141,5 +153,11 @@ export default async function ActiveWorkoutPage({
     prs,
   };
 
-  return <Hydrator workoutId={id} server={snapshot} />;
+  return (
+    <Hydrator
+      workoutId={id}
+      server={snapshot}
+      initialCurrentWeId={initialCurrentWeId}
+    />
+  );
 }

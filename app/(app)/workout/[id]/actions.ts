@@ -121,6 +121,82 @@ export const logSet = async (formData: FormData): Promise<LogSetResult> => {
   return { id, set_number: data[0].set_number ?? resolvedSetNumber };
 };
 
+// Ownership check shared by updateSet/deleteSet: resolves the set's
+// workout id iff the set belongs to this user. Missing row → null, which
+// callers treat as already-deleted (idempotent against drain retries).
+const resolveOwnedSet = async (
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  setId: string,
+): Promise<string | null> => {
+  const { data } = await supabase
+    .from("sets")
+    .select("id, workout_exercises!inner(workout_id, workouts!inner(user_id))")
+    .eq("id", setId)
+    .maybeSingle();
+  if (!data) return null;
+  const we = Array.isArray(data.workout_exercises)
+    ? data.workout_exercises[0]
+    : data.workout_exercises;
+  const ownerId = Array.isArray(we?.workouts)
+    ? we?.workouts[0]?.user_id
+    : we?.workouts?.user_id;
+  if (ownerId !== userId) throw new Error("Not allowed");
+  return we?.workout_id ?? null;
+};
+
+export const updateSet = async (formData: FormData): Promise<void> => {
+  const id = formData.get("id");
+  const weightStr = formData.get("weight_kg");
+  const repsStr = formData.get("reps");
+
+  if (typeof id !== "string") throw new Error("Invalid id");
+  if (typeof weightStr !== "string" || typeof repsStr !== "string")
+    throw new Error("Invalid weight or reps");
+
+  const weight_kg = Number(weightStr);
+  const reps = Number(repsStr);
+  if (!Number.isFinite(weight_kg) || weight_kg < 0)
+    throw new Error("Invalid weight");
+  if (!Number.isInteger(reps) || reps < 0) throw new Error("Invalid reps");
+
+  const { supabase, userId } = await requireUserId();
+
+  const workoutId = await resolveOwnedSet(supabase, userId, id);
+  // Already gone (deleted before this op drained) — nothing to update.
+  if (workoutId === null) return;
+
+  const { error } = await supabase
+    .from("sets")
+    .update({ weight_kg, reps })
+    .eq("id", id);
+  if (error) {
+    console.error("[updateSet] update failed", error);
+    throw new Error("Could not update set");
+  }
+
+  revalidatePath(`/workout/${workoutId}`);
+};
+
+export const deleteSet = async (formData: FormData): Promise<void> => {
+  const id = formData.get("id");
+  if (typeof id !== "string") throw new Error("Invalid id");
+
+  const { supabase, userId } = await requireUserId();
+
+  const workoutId = await resolveOwnedSet(supabase, userId, id);
+  // Idempotent: already deleted is success.
+  if (workoutId === null) return;
+
+  const { error } = await supabase.from("sets").delete().eq("id", id);
+  if (error) {
+    console.error("[deleteSet] delete failed", error);
+    throw new Error("Could not delete set");
+  }
+
+  revalidatePath(`/workout/${workoutId}`);
+};
+
 export const finishWorkout = async (formData: FormData): Promise<void> => {
   const workoutId = formData.get("workoutId");
   const finishedAt = formData.get("finished_at");

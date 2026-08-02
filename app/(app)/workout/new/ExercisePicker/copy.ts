@@ -4,6 +4,7 @@ export const pickerCopy = {
   searchPlaceholder: "Search exercises…",
   allFilter: "All",
   empty: "No matches.",
-  emptyFiltered: "Nothing matches that filter + search.",
+  emptyFiltered: "No exercises match your search.",
   clearFilters: "Clear filters",
+  adding: "Adding…",
 } as const;

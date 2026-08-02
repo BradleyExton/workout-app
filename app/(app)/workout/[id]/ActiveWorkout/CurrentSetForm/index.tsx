@@ -16,6 +16,11 @@ type CurrentSetFormProps = {
   formId: string;
 };
 
+const MAX_WEIGHT_KG = 500;
+const MAX_REPS = 100;
+
+type FieldError = { field: "weight" | "reps"; message: string };
+
 export const CurrentSetForm = ({
   workoutExerciseId,
   initialSetNumber,
@@ -25,26 +30,37 @@ export const CurrentSetForm = ({
   const [weight, setWeight] = useState(defaults.weight_kg);
   const [reps, setReps] = useState(defaults.reps);
   const [nextSetNumber, setNextSetNumber] = useState(initialSetNumber);
-  const [error, setError] = useState<"weight" | "reps" | null>(null);
+  const [error, setError] = useState<FieldError | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
+    if (submitting) return;
 
     const weightValue = Number(weight);
     const repsValue = Number(reps);
     if (weight.trim() === "" || !Number.isFinite(weightValue) || weightValue < 0) {
-      setError("weight");
+      setError({ field: "weight", message: currentSetCopy.errorWeight });
+      return;
+    }
+    if (weightValue > MAX_WEIGHT_KG) {
+      setError({ field: "weight", message: currentSetCopy.errorWeightMax });
       return;
     }
     if (
       reps.trim() === "" ||
       !Number.isInteger(repsValue) ||
-      repsValue < 0
+      repsValue < 1
     ) {
-      setError("reps");
+      setError({ field: "reps", message: currentSetCopy.errorReps });
+      return;
+    }
+    if (repsValue > MAX_REPS) {
+      setError({ field: "reps", message: currentSetCopy.errorRepsMax });
       return;
     }
     setError(null);
+    setSubmitting(true);
 
     const id = newId();
     const set_number = nextSetNumber;
@@ -75,11 +91,12 @@ export const CurrentSetForm = ({
     void drainQueue();
 
     setNextSetNumber((n) => n + 1);
+    setSubmitting(false);
   };
 
   return (
     <div className={styles.card}>
-      <form id={formId} onSubmit={onSubmit}>
+      <form id={formId} onSubmit={onSubmit} noValidate>
         <div className={styles.header}>
           <span className={styles.setNumber}>{nextSetNumber}</span>
           <span className={styles.label}>{currentSetCopy.currentSetLabel}</span>
@@ -87,7 +104,7 @@ export const CurrentSetForm = ({
 
         <div className={styles.grid}>
           <label
-            className={`${styles.field} ${error === "weight" ? styles.fieldError : ""}`}
+            className={`${styles.field} ${error?.field === "weight" ? styles.fieldError : ""}`}
           >
             <span className={styles.fieldLabel}>{currentSetCopy.weightLabel}</span>
             <input
@@ -97,19 +114,18 @@ export const CurrentSetForm = ({
               inputMode="decimal"
               step="0.5"
               min="0"
-              required
-              aria-invalid={error === "weight"}
+              aria-invalid={error?.field === "weight"}
               value={weight}
               onChange={(event) => {
                 setWeight(event.target.value);
-                if (error === "weight") setError(null);
+                if (error?.field === "weight") setError(null);
               }}
             />
             <span className={styles.fieldUnit}>{currentSetCopy.weightUnit}</span>
           </label>
 
           <label
-            className={`${styles.field} ${error === "reps" ? styles.fieldError : ""}`}
+            className={`${styles.field} ${error?.field === "reps" ? styles.fieldError : ""}`}
           >
             <span className={styles.fieldLabel}>{currentSetCopy.repsLabel}</span>
             <input
@@ -118,13 +134,12 @@ export const CurrentSetForm = ({
               type="number"
               inputMode="numeric"
               step="1"
-              min="0"
-              required
-              aria-invalid={error === "reps"}
+              min="1"
+              aria-invalid={error?.field === "reps"}
               value={reps}
               onChange={(event) => {
                 setReps(event.target.value);
-                if (error === "reps") setError(null);
+                if (error?.field === "reps") setError(null);
               }}
             />
             <span className={styles.fieldUnit}>{currentSetCopy.repsUnit}</span>
@@ -133,9 +148,7 @@ export const CurrentSetForm = ({
 
         {error && (
           <p role="alert" className={styles.errorText}>
-            {error === "weight"
-              ? currentSetCopy.errorWeight
-              : currentSetCopy.errorReps}
+            {error.message}
           </p>
         )}
       </form>

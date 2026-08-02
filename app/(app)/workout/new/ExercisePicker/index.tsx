@@ -25,6 +25,9 @@ type Filter = MuscleGroup | "All";
 
 type ExercisePickerProps = {
   exercises: PickerExercise[];
+  // Set when the user came from an active workout ("+ Add exercise") —
+  // Back returns there instead of stranding them on home.
+  fromWorkoutId: string | null;
 };
 
 // Finds the active workout in Dexie for this user. Dexie is the
@@ -47,11 +50,15 @@ const maxPositionInWorkout = async (workoutId: string): Promise<number> => {
 
 export const ExercisePicker = ({
   exercises,
+  fromWorkoutId,
 }: ExercisePickerProps): JSX.Element => {
   const [filter, setFilter] = useState<Filter>("All");
   const [query, setQuery] = useState("");
+  const [pickingId, setPickingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
+
+  const backHref = fromWorkoutId ? `/workout/${fromWorkoutId}` : "/";
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -68,7 +75,8 @@ export const ExercisePicker = ({
 
   const onPick = (exerciseId: string): void => {
     const exercise = exercises.find((e) => e.id === exerciseId);
-    if (!exercise) return;
+    if (!exercise || pickingId !== null) return;
+    setPickingId(exerciseId);
     startTransition(async () => {
       const nowIso = new Date().toISOString();
       const db = getDb();
@@ -91,7 +99,19 @@ export const ExercisePicker = ({
         } satisfies CreateWorkoutPayload);
       }
 
-      // 2. Append the exercise. exercise_name + exercise_primary_muscle
+      // 2. Re-picking an exercise that's already in this workout resumes
+      // its existing block instead of appending a duplicate one.
+      const existingWe = await db.workout_exercises
+        .where("workout_id")
+        .equals(workoutId)
+        .filter((we) => we.exercise_id === exerciseId)
+        .first();
+      if (existingWe) {
+        router.push(`/workout/${workoutId}?we=${existingWe.id}`);
+        return;
+      }
+
+      // 3. Append the exercise. exercise_name + exercise_primary_muscle
       // are denormalized so the active-workout page can render this row
       // even when the server hasn't received the addExercise op yet.
       const weId = newId();
@@ -115,13 +135,13 @@ export const ExercisePicker = ({
       // hydrates from Dexie (phase 7d), so we don't need to wait for the
       // server before navigating.
       void drainQueue();
-      router.push(`/workout/${workoutId}`);
+      router.push(`/workout/${workoutId}?we=${weId}`);
     });
   };
 
   return (
     <main className={styles.page}>
-      <Link className={styles.back} href="/">
+      <Link className={styles.back} href={backHref}>
         {pickerCopy.back}
       </Link>
       <h1 className={styles.title}>{pickerCopy.title}</h1>
@@ -186,17 +206,26 @@ export const ExercisePicker = ({
         )
       ) : (
         <div className={styles.list}>
-          {visible.map((exercise) => (
-            <button
-              key={exercise.id}
-              type="button"
-              onClick={() => onPick(exercise.id)}
-              className={styles.rowButton}
-            >
-              <span className={styles.rowName}>{exercise.name}</span>
-              <span className={styles.rowBadge}>{exercise.primary_muscle}</span>
-            </button>
-          ))}
+          {visible.map((exercise) => {
+            const picking = pickingId === exercise.id;
+            return (
+              <button
+                key={exercise.id}
+                type="button"
+                onClick={() => onPick(exercise.id)}
+                className={`${styles.rowButton} ${
+                  pickingId !== null ? styles.rowDisabled : ""
+                }`}
+                disabled={pickingId !== null}
+                aria-busy={picking}
+              >
+                <span className={styles.rowName}>{exercise.name}</span>
+                <span className={styles.rowBadge}>
+                  {picking ? pickerCopy.adding : exercise.primary_muscle}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </main>
