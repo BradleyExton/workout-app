@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, type JSX } from "react";
+import { useCallback, useEffect, useRef, useState, type JSX } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/client";
-import { loginCopy } from "./copy";
+import { loginCopy, loginErrors, type LoginErrorCode } from "./copy";
 import * as styles from "./styles";
 
-type Status = "idle" | "redirecting" | "error";
+type Status = "idle" | "redirecting";
+
+// How long "Redirecting…" is allowed to sit there before the button gives
+// itself back. Signing in is a full-page hand-off to Google: once
+// signInWithOAuth resolves the navigation starts within a few hundred ms,
+// so 15s is roughly ten slow-network round trips — far past any honest
+// redirect, and still inside the window where the user is watching and
+// willing to retry rather than force-quitting the app.
+const REDIRECT_TIMEOUT_MS = 15_000;
 
 const GoogleIcon = (): JSX.Element => (
   <span className={styles.googleIconWrap}>
@@ -32,11 +40,59 @@ const GoogleIcon = (): JSX.Element => (
   </span>
 );
 
-export const LoginForm = (): JSX.Element => {
+type LoginFormProps = {
+  // Resolved by the page from ?error=, already narrowed to a known code.
+  initialError?: LoginErrorCode | null;
+};
+
+export const LoginForm = ({
+  initialError = null,
+}: LoginFormProps): JSX.Element => {
   const [status, setStatus] = useState<Status>("idle");
+  const [errorCode, setErrorCode] = useState<LoginErrorCode | null>(
+    initialError,
+  );
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearRedirectTimer = useCallback((): void => {
+    if (timerRef.current === null) return;
+    clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    // Backing out of Google's consent screen restores this page from the
+    // bfcache with its React state intact — including a "Redirecting…"
+    // button for a redirect that already came and went. Hand the button
+    // back, silently: the user chose to come back, nothing failed.
+    const onPageShow = (event: PageTransitionEvent): void => {
+      if (!event.persisted) return;
+      clearRedirectTimer();
+      setStatus("idle");
+    };
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      clearRedirectTimer();
+    };
+  }, [clearRedirectTimer]);
 
   const onClick = async (): Promise<void> => {
+    // Whatever went wrong last time is now history — clear it before the
+    // retry so a stale message doesn't sit under a live attempt.
+    clearRedirectTimer();
+    setErrorCode(null);
     setStatus("redirecting");
+
+    // If the hand-off to Google never happens — blocked pop-up or
+    // redirect, an in-app browser, a wedged network — nothing else will
+    // ever move this button off "Redirecting…". This is the escape.
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      setStatus("idle");
+      setErrorCode("timeout");
+    }, REDIRECT_TIMEOUT_MS);
 
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -46,7 +102,11 @@ export const LoginForm = (): JSX.Element => {
       },
     });
 
-    if (error) setStatus("error");
+    if (error) {
+      clearRedirectTimer();
+      setStatus("idle");
+      setErrorCode("start");
+    }
   };
 
   const busy = status === "redirecting";
@@ -69,7 +129,9 @@ export const LoginForm = (): JSX.Element => {
       </Button>
 
       <div role="status" aria-live="polite" className={styles.liveRegion}>
-        {status === "error" && <p className={styles.error}>{loginCopy.error}</p>}
+        {errorCode !== null && (
+          <p className={styles.error}>{loginErrors[errorCode]}</p>
+        )}
       </div>
     </Card>
   );

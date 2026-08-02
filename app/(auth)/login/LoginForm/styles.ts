@@ -13,4 +13,7 @@ export const googleIconWrap =
 export const googleIcon = "h-4 w-4";
 
 export const liveRegion = "min-h-5 mt-3";
-export const error = "text-xs font-extrabold text-plasma-pink";
+// Plasma pink is the app's "this needs you" accent; leading-snug because
+// these messages are a sentence of instruction, not a one-word status.
+export const error =
+  "text-xs font-extrabold leading-snug text-plasma-pink text-balance";
