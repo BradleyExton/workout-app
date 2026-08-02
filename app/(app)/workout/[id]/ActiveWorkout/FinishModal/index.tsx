@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Timer } from "@/components/workout/Timer";
 import * as buttonStyles from "@/components/ui/Button/styles";
-import { getDb } from "@/lib/db/dexie";
-import { drainQueue, enqueue } from "@/lib/db/queue";
+import {
+  discardWorkoutLocally,
+  finishWorkoutLocally,
+} from "@/lib/db/closeWorkout";
+import { drainQueue } from "@/lib/db/queue";
+import { recordedFinishAtMs, toMinutes, trimmedIdleMs } from "@/lib/domain/idle";
+import { useSessionClock } from "@/lib/hooks/useSessionClock";
 import { formatVolume } from "@/lib/format/volume";
 import {
   getWorkoutUnlocks,
@@ -21,6 +26,7 @@ type FinishModalProps = {
   onClose: () => void;
   workoutId: string;
   startedAtMs: number;
+  lastSetAtMs: number | null;
   setsCount: number;
   volume: number;
   finishFlow: FinishFlow;
@@ -33,6 +39,7 @@ export const FinishModal = ({
   onClose,
   workoutId,
   startedAtMs,
+  lastSetAtMs,
   setsCount,
   volume,
   finishFlow,
@@ -46,6 +53,14 @@ export const FinishModal = ({
 
   const isEmpty = setsCount === 0;
   const busy = saving || discarding;
+
+  // The number in the stats strip is the number that gets written, not
+  // wall-clock time: someone who taps Finish the morning after should see
+  // the honest duration before they commit to it, not a five-hour figure
+  // that quietly becomes a five-hour row in history.
+  const activity = { startedAtMs, lastSetAtMs, ackAtMs: null };
+  const clock = useSessionClock(activity);
+  const trimmedMin = toMinutes(trimmedIdleMs(activity, clock.nowMs));
 
   // Re-opening the modal always starts from the non-confirming state
   // (state adjustment during render, per React docs, not an effect).
@@ -62,17 +77,12 @@ export const FinishModal = ({
     finishFlow.onStart();
     startTransition(async () => {
       setSaving(true);
-      const finishedAt = new Date().toISOString();
-      const durationMs = Date.now() - startedAtMs;
-      const db = getDb();
-      const existing = await db.workouts.get(workoutId);
-      if (existing) {
-        await db.workouts.update(workoutId, { finished_at: finishedAt });
-      }
-      await enqueue("finishWorkout", {
-        workout_id: workoutId,
-        finished_at: finishedAt,
-      });
+      // Recompute at tap time rather than reusing the rendered clock —
+      // the modal may have sat open for a while.
+      const finishedAtMs = recordedFinishAtMs(activity, Date.now());
+      const finishedAt = new Date(finishedAtMs).toISOString();
+      const durationMs = finishedAtMs - startedAtMs;
+      await finishWorkoutLocally(workoutId, finishedAt);
 
       // Await the drain so PR + achievement detection runs before we
       // fetch unlocks. If offline, the complete screen still celebrates
@@ -115,26 +125,7 @@ export const FinishModal = ({
   const onDiscard = (): void => {
     setDiscarding(true);
     startTransition(async () => {
-      const db = getDb();
-      await db.transaction(
-        "rw",
-        [db.workouts, db.workout_exercises, db.sets],
-        async () => {
-          const weIds = await db.workout_exercises
-            .where("workout_id")
-            .equals(workoutId)
-            .primaryKeys();
-          if (weIds.length > 0) {
-            await db.sets.where("workout_exercise_id").anyOf(weIds).delete();
-            await db.workout_exercises
-              .where("workout_id")
-              .equals(workoutId)
-              .delete();
-          }
-          await db.workouts.delete(workoutId);
-        },
-      );
-      await enqueue("discardWorkout", { workout_id: workoutId });
+      await discardWorkoutLocally(workoutId);
       void drainQueue();
       router.push("/");
     });
@@ -161,7 +152,11 @@ export const FinishModal = ({
       <div className={styles.statsStrip}>
         <div className={styles.statCol}>
           <span className={styles.statLabel}>{finishModalCopy.statTime}</span>
-          <Timer since={startedAtMs} className={styles.statValue} />
+          <Timer
+            since={startedAtMs}
+            stoppedAt={clock.stoppedAt}
+            className={styles.statValue}
+          />
         </div>
         <div className={styles.divider} />
         <div className={styles.statCol}>
@@ -174,6 +169,12 @@ export const FinishModal = ({
           <span className={styles.statValue}>{formatVolume(volume)}</span>
         </div>
       </div>
+
+      {clock.paused && trimmedMin > 0 && !isEmpty && (
+        <p className={styles.trimNote}>
+          {finishModalCopy.trimmedNote(trimmedMin)}
+        </p>
+      )}
 
       {isEmpty ? (
         // Nothing was logged: discarding is the safe default, and it

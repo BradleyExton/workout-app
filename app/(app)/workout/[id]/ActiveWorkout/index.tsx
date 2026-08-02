@@ -1,8 +1,11 @@
+"use client";
+
 import type { JSX } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Timer } from "@/components/workout/Timer";
 import * as buttonStyles from "@/components/ui/Button/styles";
+import { useSessionClock } from "@/lib/hooks/useSessionClock";
 import type { MuscleGroup } from "@/lib/db/types";
 import { formatWeight } from "@/lib/format/weight";
 import { formatVolume } from "@/lib/format/volume";
@@ -64,6 +67,9 @@ type ActiveWorkoutProps = {
   };
   current: WorkoutExercise | null;
   currentSets: SetRow[];
+  // Newest set across the whole session (not just the current exercise),
+  // ms-epoch. null when nothing has been logged yet.
+  lastSetAtMs: number | null;
   lastSession: { finishedAt: string; sets: LastSessionSet[] } | null;
   prs: ExercisePrs;
   setPrFlags: Record<string, SetPrFlags>;
@@ -77,6 +83,7 @@ export const ActiveWorkout = ({
   workout,
   current,
   currentSets,
+  lastSetAtMs,
   lastSession,
   prs,
   setPrFlags,
@@ -88,6 +95,13 @@ export const ActiveWorkout = ({
   const addExerciseHref = `/workout/new?from=${workout.id}`;
   const startedAtMs = new Date(workout.started_at).getTime();
   const nextSetNumber = (currentSets.at(-1)?.set_number ?? 0) + 1;
+
+  // The pill is the session's honesty indicator: pulse + a live number
+  // while sets are landing, greyed and labelled the moment the clock
+  // stops meaning anything. `ackAtMs` is null here on purpose — an "I'm
+  // still going" tap buys the session time (IdleGuard's job) but must not
+  // restart a clock that measures training.
+  const clock = useSessionClock({ startedAtMs, lastSetAtMs, ackAtMs: null });
 
   // Last session's set count is the only target we have until the XP
   // economy lands. TODO(xp): replace with workout-level quest progress.
@@ -118,13 +132,23 @@ export const ActiveWorkout = ({
         <Link className={styles.back} href="/">
           {activeWorkoutCopy.back}
         </Link>
-        <div className={styles.timerPill}>
-          <span className={styles.timerDot} />
-          <Timer since={startedAtMs} className={styles.timerText} />
+        <div className={clock.paused ? styles.timerPillPaused : styles.timerPill}>
+          <span className={clock.paused ? styles.timerDotPaused : styles.timerDot} />
+          <Timer
+            since={startedAtMs}
+            stoppedAt={clock.stoppedAt}
+            className={styles.timerText}
+          />
+          {clock.paused && (
+            <span className={styles.timerPausedLabel}>
+              {activeWorkoutCopy.timerPaused}
+            </span>
+          )}
         </div>
         <FinishControls
           workoutId={workout.id}
           startedAtMs={startedAtMs}
+          lastSetAtMs={lastSetAtMs}
           setsCount={stats.sets}
           volume={stats.volume}
           finishFlow={finishFlow}

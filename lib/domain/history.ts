@@ -16,6 +16,7 @@ import type {
   WorkoutRow,
 } from "@/lib/db/dexie";
 import type { CardioModality, MuscleGroup } from "@/lib/db/types";
+import { IMPLAUSIBLE_DURATION_MS } from "@/lib/domain/idle";
 
 export type HistorySetItem = {
   id: string;
@@ -199,6 +200,11 @@ export type LiftStats = {
   sets: number;
   volume: number;
   durationMin: number;
+  // True for rows written before the timer learned to stop: the session
+  // was almost certainly left running rather than trained for that long.
+  // The stored value is shown as-is and never rewritten — this flag only
+  // buys it a caveat in the expanded detail.
+  durationSuspect: boolean;
 };
 
 export const liftStats = (item: LiftItem): LiftStats => {
@@ -214,10 +220,12 @@ export const liftStats = (item: LiftItem): LiftStats => {
   const finished = item.finished_at
     ? new Date(item.finished_at).getTime()
     : started;
+  const durationMs = finished - started;
   return {
     sets,
     volume,
-    durationMin: Math.max(1, Math.round((finished - started) / 60_000)),
+    durationMin: Math.max(1, Math.round(durationMs / 60_000)),
+    durationSuspect: durationMs >= IMPLAUSIBLE_DURATION_MS,
   };
 };
 

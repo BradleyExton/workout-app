@@ -1,6 +1,7 @@
 export const activeWorkoutCopy = {
   back: "← Back",
   finish: "Finish",
+  timerPaused: "Paused",
   emptyHint: "No exercises yet.",
   currentSetLabel: (n: number): string => `SET ${n}`,
   setRowCheck: "✓",

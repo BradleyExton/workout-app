@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { QueueSyncer } from "@/components/system/QueueSyncer";
 import { SwRegister } from "@/components/system/SwRegister";
 import { SyncStatusChip } from "@/components/system/SyncStatusChip";
+import { IdleGuard } from "@/components/workout/IdleGuard";
 import { TabBar } from "@/components/TabBar";
 
 export default async function AppLayout({
@@ -23,6 +24,9 @@ export default async function AppLayout({
       <QueueSyncer />
       <SwRegister />
       <SyncStatusChip />
+      {/* Layout-level on purpose: a session is most likely to be
+          abandoned from somewhere other than the workout screen. */}
+      <IdleGuard />
       {children}
       <TabBar />
     </>

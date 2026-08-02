@@ -5,6 +5,10 @@ export const finishModalCopy = {
   statTime: "Time",
   statSets: "Sets",
   statVolume: "Volume",
+  // Shown when the clock has stopped: the time above is smaller than the
+  // wall clock, and the user gets told why before they save, not after.
+  trimmedNote: (idleMin: number): string =>
+    `Timer stopped at your last set — the ${idleMin} min since then aren't counted.`,
   finishAndSave: "FINISH & SAVE →",
   discard: "Discard workout",
   discardConfirmBody: (sets: number): string =>

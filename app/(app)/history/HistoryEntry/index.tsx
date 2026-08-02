@@ -92,6 +92,10 @@ const LiftDetail = ({ item }: { item: LiftItem }): JSX.Element => {
         />
       </div>
 
+      {stats.durationSuspect && (
+        <p className={styles.panelNote}>{historyEntryCopy.suspectDuration}</p>
+      )}
+
       {item.exercises.length === 0 ? (
         <p className={styles.panelNote}>{historyEntryCopy.noExercises}</p>
       ) : (

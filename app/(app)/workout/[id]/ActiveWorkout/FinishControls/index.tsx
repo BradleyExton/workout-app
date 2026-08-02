@@ -19,6 +19,7 @@ export type FinishFlow = {
 type FinishControlsProps = {
   workoutId: string;
   startedAtMs: number;
+  lastSetAtMs: number | null;
   setsCount: number;
   volume: number;
   finishFlow: FinishFlow;
@@ -29,6 +30,7 @@ type FinishControlsProps = {
 export const FinishControls = ({
   workoutId,
   startedAtMs,
+  lastSetAtMs,
   setsCount,
   volume,
   finishFlow,
@@ -54,6 +56,7 @@ export const FinishControls = ({
         }}
         workoutId={workoutId}
         startedAtMs={startedAtMs}
+        lastSetAtMs={lastSetAtMs}
         setsCount={setsCount}
         volume={volume}
         finishFlow={finishFlow}

@@ -83,7 +83,12 @@ export default async function ActiveWorkoutPage({
   const { data: rawSets } = exercisesList.length
     ? await supabase
         .from("sets")
-        .select("id, set_number, weight_kg, reps, workout_exercise_id")
+        // completed_at is load-bearing, not decoration: the idle logic
+        // dates a session by its newest set. Seeding Dexie without it
+        // (the old fallback stamped every set at started_at) made a
+        // freshly-hydrated workout look untouched since it began, i.e.
+        // instantly eligible for auto-close.
+        .select("id, set_number, weight_kg, reps, completed_at, workout_exercise_id")
         .in(
           "workout_exercise_id",
           exercisesList.map((we) => we.id),
@@ -97,6 +102,7 @@ export default async function ActiveWorkoutPage({
     set_number: s.set_number,
     weight_kg: Number(s.weight_kg),
     reps: s.reps,
+    completed_at: s.completed_at,
   }));
 
   let lastSession: ServerSnapshot["lastSession"] = null;

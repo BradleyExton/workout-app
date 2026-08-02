@@ -46,6 +46,7 @@ type ServerSet = {
   set_number: number;
   weight_kg: number;
   reps: number;
+  completed_at: string;
 };
 
 type ServerLastSession = {
@@ -179,8 +180,7 @@ export const Hydrator = ({
             set_number: s.set_number,
             weight_kg: s.weight_kg,
             reps: s.reps,
-            completed_at:
-              server.workout?.started_at ?? new Date().toISOString(),
+            completed_at: s.completed_at,
           }));
         if (missing.length > 0) await db.sets.bulkAdd(missing);
       }
@@ -318,12 +318,23 @@ export const Hydrator = ({
         set_number: s.set_number,
         weight_kg: s.weight_kg,
         reps: s.reps,
+        completed_at: s.completed_at,
         pending: pendingSetIds.has(s.id),
       });
     }
     const sets = [...setById.values()].filter((s) => !deletedSetIds.has(s.id));
 
-    return { workout, workoutExercises, sets };
+    // Newest set in the whole session, across every exercise — the one
+    // signal the idle logic treats as proof that training is happening.
+    // Null until something is logged; the caller falls back to the start.
+    let lastSetAtMs: number | null = null;
+    for (const set of sets) {
+      const ms = new Date(set.completed_at).getTime();
+      if (!Number.isFinite(ms)) continue;
+      if (lastSetAtMs === null || ms > lastSetAtMs) lastSetAtMs = ms;
+    }
+
+    return { workout, workoutExercises, sets, lastSetAtMs };
   }, [
     server,
     dexieWorkout,
@@ -340,13 +351,25 @@ export const Hydrator = ({
   // finish flow, which owns the navigation home.
   const staleFinished =
     finishState.phase === "idle" && merged.workout?.finished_at != null;
+  // Discarded out from under us — by the idle guard's auto-close, or on
+  // another tab. The tombstone says the absence is deliberate, so this is
+  // not the "no such workout" case below: bouncing home is right, and
+  // accusing the user of following a dead link is not.
+  const staleDiscarded =
+    finishState.phase === "idle" && locallyClosed && dexieWorkout === null;
   useEffect(() => {
-    if (staleFinished) router.replace("/");
-  }, [staleFinished, router]);
+    if (staleFinished || staleDiscarded) router.replace("/");
+  }, [staleFinished, staleDiscarded, router]);
 
   // Nothing from the server and Dexie still opening: wait rather than
   // accuse. This is the normal first frame of an offline reopen.
   if (!merged.workout && dexiePending) {
+    return <main className={styles.empty} />;
+  }
+
+  // Deliberately closed, not missing: hold a blank frame for the
+  // redirect above rather than flashing an accusation.
+  if (staleDiscarded) {
     return <main className={styles.empty} />;
   }
 
@@ -469,6 +492,7 @@ export const Hydrator = ({
           : null
       }
       currentSets={currentSets}
+      lastSetAtMs={merged.lastSetAtMs}
       lastSession={lastSession}
       prs={currentExercisePrPills}
       setPrFlags={setPrFlags}

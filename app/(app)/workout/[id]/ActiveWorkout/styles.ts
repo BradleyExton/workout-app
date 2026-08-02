@@ -6,6 +6,12 @@ export const timerPill =
   "flex items-center gap-2 rounded-full border border-pulse/40 bg-panel px-3 py-1.5 text-pulse";
 export const timerDot = "w-2 h-2 rounded-full bg-pulse shadow-glow-pulse";
 export const timerText = "display text-sm tabular-nums";
+// Paused: pulse means "live", so a stopped clock must give the colour up
+// entirely rather than wear it dimmed.
+export const timerPillPaused =
+  "flex items-center gap-2 rounded-full border border-edge bg-panel px-3 py-1.5 text-dust";
+export const timerDotPaused = "w-2 h-2 rounded-full bg-dust-dim";
+export const timerPausedLabel = "text-[9px] font-extrabold uppercase tracking-widest text-dust-dim";
 export const finishBtn =
   "border border-edge rounded-full bg-panel text-dust px-3 py-1.5 text-xs font-extrabold uppercase tracking-widest disabled:opacity-50";
 

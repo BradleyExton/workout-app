@@ -28,6 +28,11 @@ export const historyEntryCopy = {
   setCount: (count: number): string =>
     `${count} ${count === 1 ? "set" : "sets"}`,
   setLegend: "Each chip is one set — weight × reps.",
+  // Shown, not corrected. The stored duration is what it is; this says
+  // out loud that it probably measures a forgotten timer rather than
+  // time under the bar. New sessions stop the clock at the last set.
+  suspectDuration:
+    "Unusually long for a lift — the timer used to keep counting after the last set, so this session was probably just left running. The sets below are accurate either way.",
   unnamedExercise: "Exercise",
   noExercises: "No sets were logged in this workout.",
   noDistance: "No distance logged for this session.",

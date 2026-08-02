@@ -11,6 +11,8 @@ export const statLabel = "text-[9px] font-extrabold uppercase text-dust";
 export const statValue = "display text-lg leading-none text-glow tabular-nums";
 export const divider = "w-px h-8 bg-edge";
 
+export const trimNote = "mt-2 text-[11px] font-semibold leading-snug text-dust";
+
 export const primaryCta = "mt-4";
 export const discardBtn =
   "mt-2 w-full text-center py-2 text-xs font-extrabold uppercase tracking-widest text-plasma-pink disabled:opacity-50";
