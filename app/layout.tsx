@@ -1,19 +1,12 @@
 import type { JSX } from "react";
 import type { Metadata, Viewport } from "next";
-import { Bungee, Bricolage_Grotesque } from "next/font/google";
+import { Baloo_2 } from "next/font/google";
 import "./globals.css";
 
-const bungee = Bungee({
-  weight: "400",
+const baloo = Baloo_2({
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
-  variable: "--font-bungee",
-  display: "swap",
-});
-
-const bricolage = Bricolage_Grotesque({
-  weight: ["500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-bricolage",
+  variable: "--font-baloo",
   display: "swap",
 });
 
@@ -40,7 +33,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0a0a0a",
+  themeColor: "#140b26",
 };
 
 export default function RootLayout({
@@ -51,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bungee.variable} ${bricolage.variable} h-full antialiased`}
+      className={`${baloo.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>

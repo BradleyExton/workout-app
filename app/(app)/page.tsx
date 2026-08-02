@@ -1,6 +1,4 @@
 import type { JSX } from "react";
-import { Card } from "@/components/ui/Card";
-import { Mascot } from "@/components/mascot/Mascot";
 import { createClient } from "@/lib/supabase/server";
 import { currentDate, isoDaysAgo } from "@/lib/domain/time";
 import { type MuscleGroup } from "@/lib/db/types";
@@ -139,17 +137,10 @@ export default async function HomePage(): Promise<JSX.Element> {
   return (
     <main className={styles.page}>
       <div className={styles.header}>
-        <div className={styles.headerText}>
-          <span className={styles.headerDate}>{headerDate}</span>
-          <h1 className={styles.headerGreeting}>
-            {homeCopy.greetingPrefix}
-            <br />
-            {displayName}!
-          </h1>
-        </div>
-        <Card variant="lime" className={styles.mascotWrap}>
-          <Mascot kind="flex-hero" className={styles.mascot} />
-        </Card>
+        <span className={styles.headerDate}>{headerDate}</span>
+        <h1 className={styles.headerGreeting}>
+          {homeCopy.greetingPrefix} {displayName}!
+        </h1>
       </div>
 
       {isFreshAccount && <HomeOnboarding />}

@@ -103,6 +103,28 @@ export const HomeMetrics = ({
 
   return (
     <>
+      {metrics.streakDays >= 2 && (
+        <div className={styles.streakBanner}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={styles.streakFlame}
+            aria-hidden
+          >
+            <path
+              d="M12 2c1 4-3 5.5-3 9a5 5 0 0 0 10 0c0-2-1-3.5-2-4.5.2 2-.8 3-1.8 3.2C15.8 8 14 5 12 2z"
+              fill="#ff3ea5"
+              stroke="#ff9d3c"
+              strokeWidth="1.2"
+            />
+          </svg>
+          <b className={styles.streakText}>
+            {metrics.streakDays}
+            {homeMetricsCopy.streakSuffix}
+          </b>
+        </div>
+      )}
+
       <Card variant="black" className={styles.coverageHero}>
         <p className={styles.coverageKicker}>{homeMetricsCopy.coverageKicker}</p>
         <div className={styles.coverageNumbersRow}>
@@ -119,13 +141,12 @@ export const HomeMetrics = ({
         <PipRow
           filled={metrics.groupsHitThisWeek}
           total={6}
-          inverse
           className="mt-3"
         />
       </Card>
 
       <div className={styles.statsRow}>
-        <Card variant="lime" size="sm" className={styles.statCard}>
+        <Card variant="white" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statWorkouts}</p>
           <p className={styles.statValue}>{metrics.workoutsThisWeek}</p>
         </Card>
@@ -135,7 +156,7 @@ export const HomeMetrics = ({
             {formatVolume(metrics.volumeThisWeek)}
           </p>
         </Card>
-        <Card variant="black" size="sm" className={styles.statCard}>
+        <Card variant="white" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statStreak}</p>
           <p className={styles.statValue}>{metrics.streakDays}d</p>
         </Card>

@@ -2,11 +2,11 @@ export const base = "disabled:opacity-50 disabled:cursor-not-allowed";
 
 export const variant = {
   primary:
-    "w-full brutalist-md bg-ink text-lime py-4 display text-lg flex items-center justify-center gap-2",
+    "w-full rounded-2xl bg-gradient-to-r from-plasma-pink to-plasma-violet text-glow shadow-glow-plasma py-4 display text-base uppercase tracking-wide flex items-center justify-center gap-2",
   secondary:
-    "border-[2px] border-ink rounded-lg bg-white text-ink px-3 py-1.5 font-black text-xs uppercase tracking-widest",
+    "border border-edge rounded-full bg-panel text-dust px-4 py-1.5 font-extrabold text-xs uppercase tracking-widest",
   dashed:
-    "w-full border-[2px] border-dashed border-ink rounded-lg py-3 font-black text-xs uppercase tracking-widest text-ink",
+    "w-full border border-dashed border-edge rounded-xl py-3 font-extrabold text-xs uppercase tracking-widest text-dust",
   destructive:
-    "w-full py-2 font-black text-xs uppercase tracking-widest text-urgent",
+    "w-full py-2 font-extrabold text-xs uppercase tracking-widest text-plasma-pink",
 } as const;
