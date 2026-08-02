@@ -26,6 +26,19 @@ export const logCardio = async (formData: FormData): Promise<void> => {
   const duration_sec = Number(durationSecStr);
   if (!Number.isFinite(duration_sec) || duration_sec <= 0) return;
 
+  // started_at is now user-chosen (the form's Just now / Earlier / Yesterday
+  // control), so it gets the same scrutiny as the numbers. Unparseable is
+  // dropped. A future stamp is clamped rather than rejected: the form already
+  // refuses a deliberate future pick, so anything arriving here is device-clock
+  // skew the user can neither see nor fix, and rejecting would strand the
+  // queued op forever while a future timestamp would pin the session to the
+  // top of history for good.
+  const startedAtMs = Date.parse(startedAt);
+  if (Number.isNaN(startedAtMs)) return;
+  const started_at = new Date(
+    Math.min(startedAtMs, Date.now()),
+  ).toISOString();
+
   let distance_m: number | null = null;
   if (typeof distanceMStr === "string" && distanceMStr !== "") {
     const m = Number(distanceMStr);
@@ -47,7 +60,7 @@ export const logCardio = async (formData: FormData): Promise<void> => {
       modality,
       duration_sec: Math.round(duration_sec),
       distance_m,
-      started_at: startedAt,
+      started_at,
     })
     .select("id");
   if (error) {

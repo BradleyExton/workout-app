@@ -19,6 +19,16 @@ export const input =
   "display text-3xl w-full text-center bg-transparent text-glow outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 export const fieldUnit = "text-[10px] font-bold text-dust";
 
+// The time row only exists once "Earlier"/"Yesterday" is picked, so it reads
+// horizontally — label left, value right — rather than stacking like the
+// number fields and pushing the CTA further down.
+export const timeField =
+  "card-volt-sm bg-panel px-3 py-2.5 flex items-center justify-between gap-3";
+// color-scheme:dark keeps the native time picker (and WebKit's own AM/PM
+// affordance) on the dark palette instead of a white system sheet.
+export const timeInput =
+  "display text-2xl text-glow bg-transparent outline-none text-right [color-scheme:dark] [&::-webkit-date-and-time-value]:text-right";
+
 export const ctaZone =
   "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
 export const ctaInner = "pointer-events-auto";

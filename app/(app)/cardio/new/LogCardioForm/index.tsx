@@ -8,22 +8,42 @@ import { getDb } from "@/lib/db/dexie";
 import { newId } from "@/lib/db/ids";
 import { drainQueue, enqueue, type LogCardioPayload } from "@/lib/db/queue";
 import type { CardioModality } from "@/lib/db/types";
-import { cardioFormCopy, modalityLabel } from "./copy";
+import { clockValue, composeStartedAt, type WhenChoice } from "@/lib/domain/time";
+import { formatClockValue } from "@/lib/format/time";
+import { cardioFormCopy, modalityLabel, whenLabel } from "./copy";
 import * as styles from "./styles";
 
 const FORM_ID = "log-cardio-form";
 const MODALITIES: readonly CardioModality[] = ["walk", "run", "treadmill"];
+const WHEN_CHOICES: readonly WhenChoice[] = ["now", "today", "yesterday"];
 
 const REDIRECT_DELAY_MS = 1200;
+
+type FormError = "duration" | "distance" | "time" | "future";
 
 export const LogCardioForm = (): JSX.Element => {
   const [modality, setModality] = useState<CardioModality>("run");
   const [distance, setDistance] = useState("");
   const [duration, setDuration] = useState("");
-  const [error, setError] = useState<"duration" | "distance" | null>(null);
+  // "Just now" is the default so the common case stays zero extra taps.
+  const [when, setWhen] = useState<WhenChoice>("now");
+  // Raw <input type="time"> value. Seeded on the chip tap rather than at
+  // render, because a render-time clock would differ between the server
+  // pass and hydration.
+  const [time, setTime] = useState("");
+  const [error, setError] = useState<FormError | null>(null);
   const [phase, setPhase] = useState<"idle" | "saving" | "done">("idle");
   const [, startTransition] = useTransition();
   const router = useRouter();
+
+  const pickWhen = (choice: WhenChoice): void => {
+    setWhen(choice);
+    // Prefill with the current clock: for "Earlier" it means an untouched
+    // field still says "now", and it opens the native wheel somewhere near
+    // where the user is heading instead of at midnight.
+    if (choice !== "now" && time === "") setTime(clockValue(new Date()));
+    if (error === "time" || error === "future") setError(null);
+  };
 
   const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -44,12 +64,27 @@ export const LogCardioForm = (): JSX.Element => {
       }
       distanceM = Math.round(km * 1000);
     }
+
+    const now = new Date();
+    const started = composeStartedAt(when, time, now);
+    if (started === null) {
+      setError("time");
+      return;
+    }
+    // Refuse rather than clamp. Silently rewriting "11:30 PM" to now would
+    // record something the user never asked for and hide the mistake; the
+    // message points at the fix (they usually meant AM, or Yesterday).
+    if (started.getTime() > now.getTime()) {
+      setError("future");
+      return;
+    }
+
     setError(null);
     setPhase("saving");
 
     startTransition(async () => {
       const id = newId();
-      const startedAt = new Date().toISOString();
+      const startedAt = started.toISOString();
       const durationSec = Math.round(durationMin * 60);
 
       await getDb().cardio_sessions.put({
@@ -77,10 +112,14 @@ export const LogCardioForm = (): JSX.Element => {
     });
   };
 
+  const doneClock = when === "now" ? null : formatClockValue(time);
   const summary = cardioFormCopy.doneSummary(
     modalityLabel[modality],
     distance.trim() === "" ? null : Number(distance),
     Number(duration),
+    when === "now" || doneClock === null
+      ? null
+      : cardioFormCopy.doneWhen(when, doneClock),
   );
 
   return (
@@ -107,6 +146,44 @@ export const LogCardioForm = (): JSX.Element => {
             );
           })}
         </div>
+
+        <p className={styles.sectionLabel}>{cardioFormCopy.whenLabel}</p>
+        <div className={styles.chipRow}>
+          {WHEN_CHOICES.map((value) => {
+            const active = when === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => pickWhen(value)}
+                className={`${styles.chipBase} ${active ? styles.chipActive : styles.chipIdle}`}
+              >
+                {whenLabel[value]}
+              </button>
+            );
+          })}
+        </div>
+
+        {when !== "now" && (
+          <label
+            className={`${styles.timeField} ${error === "time" || error === "future" ? styles.fieldError : ""}`}
+          >
+            <span className={styles.fieldLabel}>
+              {cardioFormCopy.timeFieldLabel(when)}
+            </span>
+            <input
+              className={styles.timeInput}
+              name="started_time"
+              type="time"
+              aria-invalid={error === "time" || error === "future"}
+              value={time}
+              onChange={(event) => {
+                setTime(event.target.value);
+                if (error === "time" || error === "future") setError(null);
+              }}
+            />
+          </label>
+        )}
 
         <div className={styles.fieldGrid}>
           <label
@@ -154,9 +231,7 @@ export const LogCardioForm = (): JSX.Element => {
 
         {error && (
           <p role="alert" className={styles.errorText}>
-            {error === "duration"
-              ? cardioFormCopy.errorDuration
-              : cardioFormCopy.errorDistance}
+            {cardioFormCopy.errors[error]}
           </p>
         )}
       </form>

@@ -1,4 +1,4 @@
-import { calendarDaysBetween } from "@/lib/domain/time";
+import { calendarDaysBetween, parseClockValue } from "@/lib/domain/time";
 
 const MS_PER_DAY = 86_400_000;
 
@@ -49,6 +49,15 @@ export const formatDayLabel = (date: Date, now: Date = new Date()): string => {
 
 export const formatClockTime = (date: Date): string =>
   date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+
+// "14:30" → "2:30 PM". The cardio form holds the raw time-input value, and
+// echoing it back in the confirmation needs no date attached. null when the
+// value is blank or malformed, so the caller can drop the clause entirely.
+export const formatClockValue = (time: string): string | null => {
+  const clock = parseClockValue(time);
+  if (!clock) return null;
+  return formatClockTime(new Date(2000, 0, 1, clock.hours, clock.minutes));
+};
 
 // Cardio pace as mm:ss per km. null when there's no distance to divide by
 // — a treadmill session logged without distance has no honest pace.
