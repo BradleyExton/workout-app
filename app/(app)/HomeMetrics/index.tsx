@@ -5,6 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Card } from "@/components/ui/Card";
 import { PipRow } from "@/components/ui/PipRow";
 import { getDb } from "@/lib/db/dexie";
+import { localWorkoutClosures } from "@/lib/db/tombstones";
 import { deriveHomeMetrics } from "@/lib/domain/homeMetrics";
 import { formatVolume } from "@/lib/format/volume";
 import { formatDaysAgo } from "@/lib/format/time";
@@ -54,12 +55,24 @@ export const HomeMetrics = ({
     [],
   );
 
+  // Discarding a workout offline deletes its sets locally, but the server
+  // snapshot this page shipped with still counts them towards the week's
+  // volume and muscle coverage until the queue drains.
+  const discardedWorkoutIds = useLiveQuery(
+    async () => (await localWorkoutClosures()).discarded,
+    [],
+    new Set<string>(),
+  );
+
   const metrics = useMemo(() => {
     const cutoffMs = nowMs - SINCE_MS;
     const weById = new Map(dexieExercises.map((we) => [we.id, we]));
 
     const setById = new Map<string, FlatSet>();
-    for (const s of serverFlatSets) setById.set(s.id, s);
+    for (const s of serverFlatSets) {
+      if (discardedWorkoutIds.has(s.workout_id)) continue;
+      setById.set(s.id, s);
+    }
 
     for (const s of dexieSets) {
       if (new Date(s.completed_at).getTime() < cutoffMs) continue;
@@ -69,6 +82,7 @@ export const HomeMetrics = ({
         we?.exercise_primary_muscle ?? fromServer?.primary_muscle;
       const workout_id = we?.workout_id ?? fromServer?.workout_id;
       if (!primary_muscle || !workout_id) continue;
+      if (discardedWorkoutIds.has(workout_id)) continue;
       setById.set(s.id, {
         id: s.id,
         weight_kg: s.weight_kg,
@@ -99,6 +113,7 @@ export const HomeMetrics = ({
     dexieSets,
     dexieExercises,
     dexieFinishedWorkouts,
+    discardedWorkoutIds,
   ]);
 
   return (

@@ -10,6 +10,7 @@ import type {
   LogSetPayload,
   UpdateSetPayload,
 } from "@/lib/db/queue";
+import { isWorkoutClosedLocally } from "@/lib/db/tombstones";
 import type { MuscleGroup } from "@/lib/db/types";
 import { computePrFlags, type PrType, type SetForPr } from "@/lib/domain/pr";
 import type { WorkoutUnlocks } from "../../actions";
@@ -122,9 +123,16 @@ export const Hydrator = ({
   // waiting to drain. Writing it over local rows would silently revert
   // the user's own work. The single exception is a finish, which is
   // monotonic and may have happened on another device.
+  //
+  // Fill-only is not enough on its own for a discard: that path deletes
+  // the Dexie rows outright, so "fill what's missing" happily rebuilds
+  // the entire workout from a snapshot that predates the discard. The
+  // queue tombstone is what tells us the absence was deliberate.
   useEffect(() => {
     const seed = async (): Promise<void> => {
       const db = getDb();
+
+      if (await isWorkoutClosedLocally(workoutId)) return;
 
       if (server.workout) {
         const local = await db.workouts.get(server.workout.id);
@@ -180,17 +188,25 @@ export const Hydrator = ({
     void seed();
   }, [workoutId, server]);
 
-  // `?? null` matters: it makes `undefined` mean "Dexie hasn't answered
-  // yet" and `null` mean "no such workout here". Without the distinction
-  // the first paint of an offline reopen — server snapshot empty, Dexie
-  // still opening — flashes "Workout not found" at someone whose sets are
-  // sitting safely in IndexedDB.
-  const dexieWorkout = useLiveQuery(
-    async () => (await getDb().workouts.get(workoutId)) ?? null,
+  // `undefined` matters: it means "Dexie hasn't answered yet", as opposed
+  // to a resolved `row: null` meaning "no such workout here". Without the
+  // distinction the first paint of an offline reopen — server snapshot
+  // empty, Dexie still opening — flashes "Workout not found" at someone
+  // whose sets are sitting safely in IndexedDB.
+  //
+  // The row and the tombstone are read together so the two never arrive
+  // out of step and briefly render a discarded workout as live.
+  const localWorkout = useLiveQuery(
+    async () => ({
+      row: (await getDb().workouts.get(workoutId)) ?? null,
+      closed: await isWorkoutClosedLocally(workoutId),
+    }),
     [workoutId],
     undefined,
   );
-  const dexiePending = dexieWorkout === undefined;
+  const dexieWorkout = localWorkout?.row ?? null;
+  const locallyClosed = localWorkout?.closed ?? false;
+  const dexiePending = localWorkout === undefined;
 
   const dexieExercises = useLiveQuery(
     () =>
@@ -249,13 +265,17 @@ export const Hydrator = ({
   );
 
   const merged = useMemo(() => {
-    const workout =
-      dexieWorkout
-        ? {
-            id: dexieWorkout.id,
-            started_at: dexieWorkout.started_at,
-            finished_at: dexieWorkout.finished_at,
-          }
+    // A workout discarded locally has no Dexie row by design. Falling
+    // back to the server snapshot then re-renders the session the user
+    // just deleted, so the tombstone wins over the server.
+    const workout = dexieWorkout
+      ? {
+          id: dexieWorkout.id,
+          started_at: dexieWorkout.started_at,
+          finished_at: dexieWorkout.finished_at,
+        }
+      : locallyClosed
+        ? null
         : server.workout;
 
     const weById = new Map<string, MergedWE>();
@@ -304,7 +324,15 @@ export const Hydrator = ({
     const sets = [...setById.values()].filter((s) => !deletedSetIds.has(s.id));
 
     return { workout, workoutExercises, sets };
-  }, [server, dexieWorkout, dexieExercises, dexieSets, pendingSetIds, deletedSetIds]);
+  }, [
+    server,
+    dexieWorkout,
+    locallyClosed,
+    dexieExercises,
+    dexieSets,
+    pendingSetIds,
+    deletedSetIds,
+  ]);
 
   // Finished workouts shouldn't render the active page. Server-side this
   // would have been a redirect; here we mirror it once Dexie reports
