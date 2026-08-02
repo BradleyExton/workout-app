@@ -15,22 +15,6 @@
   --color-dust: #b9a8e8;
   --color-dust-dim: #5d4a8f;
 
-  /* Mascot palette (kept while the mascot still renders on login/offline) */
-  --color-skin: #ffd9b3;
-  --color-hair: #3d2817;
-
-  /* ---- Legacy aliases — MIGRATION SCAFFOLDING, DELETE WHEN ALL SCREENS
-   * ARE ON VOLT. Unmigrated screens still reference the brutalist names;
-   * these remaps keep them readable on the dark ground until their phase.
-   * Note `white` is remapped to the panel color on purpose: new Volt code
-   * must use bg-panel/text-glow, never bg-white/text-white. */
-  --color-white: #1d1038;
-  --color-ink: #f2ecff;
-  --color-lime: #8b3dff;
-  --color-urgent: #ff3ea5;
-  --color-cream: #1d1038;
-  --color-paper: #140b26;
-
   --font-display: var(--font-baloo);
   --font-sans: var(--font-baloo);
 
@@ -39,33 +23,19 @@
   --shadow-glow-pulse: 0 0 22px rgb(38 240 229 / 0.4);
   --shadow-glow-gold: 0 0 18px rgb(255 201 60 / 0.5);
 
-  /* Legacy shadow names → soft dark depth (brutal offsets are gone). */
-  --shadow-brutal: 0 12px 32px -16px rgb(0 0 0 / 0.7);
-  --shadow-brutal-sm: 0 8px 24px -14px rgb(0 0 0 / 0.6);
-
   --tracking-display: 0.01em;
 }
 
 /* Extract load-bearing class combos once they repeat 3+ times across styles.ts
  * files. Keep this list short — if a pattern only appears twice, inline it. */
 
-/* Volt card chrome. The legacy brutalist-* names are aliased below so
- * unmigrated screens pick up the new look for free; new code should use
- * card-volt / card-volt-sm. */
+/* Volt card chrome. */
 @utility card-volt {
   @apply border border-edge rounded-2xl bg-panel;
 }
 
 @utility card-volt-sm {
   @apply border border-edge rounded-xl bg-panel;
-}
-
-@utility brutalist-sm {
-  @apply border border-edge rounded-xl;
-}
-
-@utility brutalist-md {
-  @apply border border-edge rounded-2xl;
 }
 
 @utility kicker {

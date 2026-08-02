@@ -34,12 +34,14 @@ mockups: https://claude.ai/code/artifact/b9c2c15a-ff33-4d2f-9a70-8931f92aae34
   `Modal`), Home screen.
 - ✅ Phase 2: workout flow (exercise picker, active workout, finish modal,
   workout-complete screen) and cardio logging.
-- ⏳ Not yet migrated: history, profile, login, offline.
-  These lean on **legacy alias tokens** (`ink`, `lime`, `paper`, `cream`,
-  `urgent`, and a remapped `white`) declared in `globals.css` — scaffolding
-  that keeps them readable on the dark ground. Delete the aliases once every
-  screen is migrated. New code must never use them (notably: use
-  `bg-panel` / `text-glow`, never `bg-white` / `text-white`).
+- ✅ Phase 3: history, profile, login, offline. **Every screen is on Volt.**
+  The legacy alias tokens (`ink`, `lime`, `paper`, `cream`, `urgent`, the
+  remapped `white`), the `brutalist-*` utilities and the `shadow-brutal*`
+  names are **deleted** — `globals.css` now declares Volt tokens only. The
+  unused mascot component was deleted with them, along with its
+  `--color-skin` / `--color-hair` palette.
+  `Card` variants are now `panel` / `plasma` / `muted` (was
+  `white`/`black`/`lime`/`urgent`/`cream`).
 - 🔜 Later phase: the XP economy (levels, quests, badge-drop moments) —
   computed from existing tables (`sets`, `workouts`, `cardio_sessions`,
   `user_achievements`), no new source of truth.

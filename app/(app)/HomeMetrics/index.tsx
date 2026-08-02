@@ -125,7 +125,7 @@ export const HomeMetrics = ({
         </div>
       )}
 
-      <Card variant="black" className={styles.coverageHero}>
+      <Card variant="panel" className={styles.coverageHero}>
         <p className={styles.coverageKicker}>{homeMetricsCopy.coverageKicker}</p>
         <div className={styles.coverageNumbersRow}>
           <span className={styles.coverageBigNumber}>
@@ -146,17 +146,17 @@ export const HomeMetrics = ({
       </Card>
 
       <div className={styles.statsRow}>
-        <Card variant="white" size="sm" className={styles.statCard}>
+        <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statWorkouts}</p>
           <p className={styles.statValue}>{metrics.workoutsThisWeek}</p>
         </Card>
-        <Card variant="white" size="sm" className={styles.statCard}>
+        <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statVolume}</p>
           <p className={styles.statValue}>
             {formatVolume(metrics.volumeThisWeek)}
           </p>
         </Card>
-        <Card variant="white" size="sm" className={styles.statCard}>
+        <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statStreak}</p>
           <p className={styles.statValue}>{metrics.streakDays}d</p>
         </Card>
@@ -168,7 +168,7 @@ export const HomeMetrics = ({
           <Card
             key={entry.group}
             size="sm"
-            variant={entry.setsThisWeek === 0 ? "cream" : "white"}
+            variant={entry.setsThisWeek === 0 ? "muted" : "panel"}
             className={styles.muscleCard}
           >
             <p className={styles.muscleName}>{entry.group.toUpperCase()}</p>

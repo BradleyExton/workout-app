@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
+import * as styles from "./styles";
 
 export default async function LoginPage(): Promise<JSX.Element> {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function LoginPage(): Promise<JSX.Element> {
   if (user) redirect("/");
 
   return (
-    <main className="flex min-h-dvh items-center justify-center p-6">
+    <main className={styles.page}>
       <LoginForm />
     </main>
   );

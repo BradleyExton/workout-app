@@ -12,7 +12,7 @@ type CardProps = {
 };
 
 export const Card = ({
-  variant = "white",
+  variant = "panel",
   size = "md",
   className = "",
   children,

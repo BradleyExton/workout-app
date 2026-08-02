@@ -30,7 +30,7 @@ export const Modal = ({ open, onClose, children }: ModalProps): JSX.Element | nu
       onClick={onClose}
     >
       <div onClick={(event) => event.stopPropagation()}>
-        <Card variant="cream" className={styles.card}>
+        <Card variant="muted" className={styles.card}>
           {children}
         </Card>
       </div>

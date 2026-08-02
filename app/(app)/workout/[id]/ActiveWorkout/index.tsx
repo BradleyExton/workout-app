@@ -132,7 +132,7 @@ export const ActiveWorkout = ({
 
       {current?.exercise ? (
         <>
-          <Card variant="lime" className={styles.hero}>
+          <Card variant="plasma" className={styles.hero}>
             <div className={styles.heroRow}>
               <span className={styles.groupBadge}>
                 {current.exercise.primary_muscle}
@@ -166,7 +166,7 @@ export const ActiveWorkout = ({
           prs.oneRm !== null ||
           prs.volume !== null ||
           prs.reps !== null ? (
-            <Card variant="cream" className={styles.lastSessionCard}>
+            <Card variant="muted" className={styles.lastSessionCard}>
               {lastSession && lastSession.sets.length > 0 && (
                 <>
                   <div className={styles.lastSessionHeader}>
@@ -244,7 +244,7 @@ export const ActiveWorkout = ({
             />
           </div>
 
-          <Card variant="cream" size="sm" className={styles.statsCard}>
+          <Card variant="muted" size="sm" className={styles.statsCard}>
             <p className={styles.statsLabel}>{activeWorkoutCopy.sessionLabel}</p>
             <div className={styles.statsGrid}>
               <div>
