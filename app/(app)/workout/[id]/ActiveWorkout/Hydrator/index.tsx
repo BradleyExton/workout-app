@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, type JSX } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -8,9 +8,19 @@ import { getDb } from "@/lib/db/dexie";
 import type { LogSetPayload } from "@/lib/db/queue";
 import type { MuscleGroup } from "@/lib/db/types";
 import { computePrFlags, type PrType, type SetForPr } from "@/lib/domain/pr";
+import type { WorkoutUnlocks } from "../../actions";
 import { ActiveWorkout } from "..";
+import type { FinishFlow } from "../FinishControls";
+import { WorkoutComplete } from "../WorkoutComplete";
 import { hydratorCopy } from "./copy";
 import * as styles from "./styles";
+
+// idle → finishing (modal saving; suppresses the finished-redirect) →
+// complete (celebration screen replaces the active page).
+type FinishState =
+  | { phase: "idle" }
+  | { phase: "finishing" }
+  | { phase: "complete"; unlocks: WorkoutUnlocks; durationMs: number };
 
 type ServerExercise = {
   id: string;
@@ -72,6 +82,19 @@ type MergedSet = ServerSet & { pending: boolean };
 
 export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
   const router = useRouter();
+  const [finishState, setFinishState] = useState<FinishState>({
+    phase: "idle",
+  });
+  const finishFlow = useMemo<FinishFlow>(
+    () => ({
+      onStart: () => setFinishState({ phase: "finishing" }),
+      onReset: () =>
+        setFinishState((s) => (s.phase === "complete" ? s : { phase: "idle" })),
+      onComplete: ({ unlocks, durationMs }) =>
+        setFinishState({ phase: "complete", unlocks, durationMs }),
+    }),
+    [],
+  );
 
   // One-shot: seed Dexie from the server snapshot so a fresh device picks
   // up the active workout. Idempotent — subsequent live-queries keep
@@ -221,10 +244,13 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
 
   // Finished workouts shouldn't render the active page. Server-side this
   // would have been a redirect; here we mirror it once Dexie reports
-  // finished_at (e.g., user finished offline, drain hasn't run yet).
+  // finished_at — unless the finish is happening through THIS page's
+  // finish flow, which owns the navigation home.
+  const staleFinished =
+    finishState.phase === "idle" && merged.workout?.finished_at != null;
   useEffect(() => {
-    if (merged.workout?.finished_at) router.replace("/");
-  }, [merged.workout?.finished_at, router]);
+    if (staleFinished) router.replace("/");
+  }, [staleFinished, router]);
 
   if (!merged.workout) {
     return (
@@ -238,7 +264,7 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
     );
   }
 
-  if (merged.workout.finished_at) {
+  if (staleFinished) {
     return <main className={styles.empty} />;
   }
 
@@ -315,6 +341,18 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
     0,
   );
 
+  if (finishState.phase === "complete") {
+    return (
+      <WorkoutComplete
+        setsCount={totalSets}
+        volume={totalVolume}
+        durationMs={finishState.durationMs}
+        unlocks={finishState.unlocks}
+        onContinue={() => router.push("/")}
+      />
+    );
+  }
+
   return (
     <ActiveWorkout
       workout={merged.workout}
@@ -337,6 +375,7 @@ export const Hydrator = ({ workoutId, server }: HydratorProps): JSX.Element => {
         exercises: merged.workoutExercises.length,
         volume: totalVolume,
       }}
+      finishFlow={finishFlow}
     />
   );
 };

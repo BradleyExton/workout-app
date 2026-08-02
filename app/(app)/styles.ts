@@ -1,13 +1,10 @@
 export const page = "flex min-h-dvh flex-col px-4 pt-5 pb-32 gap-4";
 
-export const header = "flex items-center justify-between gap-3";
-export const headerText = "flex flex-col";
-export const headerDate = "text-xs font-black uppercase tracking-widest opacity-70";
-export const headerGreeting = "display text-3xl leading-none mt-1";
-export const mascotWrap = "w-20 h-20 flex items-center justify-center overflow-hidden flex-shrink-0";
-export const mascot = "w-[90px] h-[90px]";
+export const header = "flex flex-col";
+export const headerDate = "kicker text-dust";
+export const headerGreeting = "display text-3xl leading-tight mt-1";
 
 export const ctaZone =
-  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper pointer-events-none";
+  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
 
-export const cardioHeader = "kicker opacity-70 mt-2";
+export const cardioHeader = "kicker text-dust mt-2";

@@ -12,14 +12,4 @@ export const finishModalCopy = {
   drainFailed:
     "Couldn't sync with server — your data is saved locally and will sync next time you're online.",
   continueOffline: "CONTINUE →",
-  unlocksKicker: "New this session",
-  unlocksTitle: "UNLOCKED",
-  newPrLabel: "NEW PR",
-  unlockedLabel: "UNLOCKED",
-  continueCta: "CONTINUE →",
-  prTypeLabel: {
-    "1rm": "1RM",
-    volume: "VOL",
-    reps: "REPS",
-  },
 } as const;

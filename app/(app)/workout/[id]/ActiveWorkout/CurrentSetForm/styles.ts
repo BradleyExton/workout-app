@@ -1,18 +1,23 @@
-export const card = "p-4";
+// The live set gets the cyan treatment — pulse border + glow marks
+// "whatever is live right now". Not card-volt: its border-edge would
+// collide with border-pulse.
+export const card =
+  "rounded-2xl border border-pulse bg-panel shadow-glow-pulse p-4";
 export const header = "flex items-center gap-2 mb-3";
-export const setNumber = "display text-lg w-7 text-center";
-export const label = "text-xs font-black uppercase tracking-widest";
+export const setNumber =
+  "display text-lg w-7 text-center text-pulse [text-shadow:0_0_12px_rgba(38,240,229,0.5)]";
+export const label = "kicker text-pulse";
 
 export const grid = "grid grid-cols-2 gap-2";
 export const field =
-  "brutalist-sm bg-white text-ink p-3 flex flex-col items-center gap-1";
-export const fieldLabel = "text-[9px] font-black uppercase opacity-70";
+  "rounded-xl border border-edge bg-void/40 p-3 flex flex-col items-center gap-1";
+export const fieldLabel = "text-[9px] font-extrabold uppercase text-dust";
 export const input =
-  "display text-3xl w-full text-center bg-transparent outline-none focus:text-ink [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
-export const fieldUnit = "text-[10px] font-bold opacity-60";
+  "display text-3xl w-full text-center bg-transparent text-glow outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+export const fieldUnit = "text-[10px] font-bold text-dust";
 
-export const ctaZone =
-  "fixed left-0 right-0 bottom-0 px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper";
-
-export const fieldError = "border-[2.5px] border-urgent";
-export const errorText = "text-xs font-black text-urgent mt-2 text-center";
+// Ring, not border: stacking a second border-color utility on `field`
+// would conflict with border-edge.
+export const fieldError = "ring-2 ring-plasma-pink";
+export const errorText =
+  "text-xs font-extrabold text-plasma-pink mt-2 text-center";

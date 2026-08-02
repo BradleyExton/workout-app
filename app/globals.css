@@ -1,45 +1,59 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0a0a0a;
-  --color-lime: #c8ff2d;
-  --color-urgent: #ff6b35;
-  --color-cream: #fff8e3;
-  --color-paper: #f5f1e3;
-  --color-skin: #ffd9b3;
-  --color-hair: #3d2817;
+  /* ---- Volt tokens ----------------------------------------------------
+   * Each accent has one job: plasma = actions/identity, pulse = whatever
+   * is live right now, gold = XP & rewards only. */
+  --color-void: #140b26;
+  --color-panel: #1d1038;
+  --color-edge: #35205e;
+  --color-plasma-pink: #ff3ea5;
+  --color-plasma-violet: #8b3dff;
+  --color-pulse: #26f0e5;
+  --color-gold: #ffc93c;
+  --color-glow: #f2ecff;
+  --color-dust: #b9a8e8;
+  --color-dust-dim: #5d4a8f;
 
-  --font-display: var(--font-bungee);
-  --font-sans: var(--font-bricolage);
+  --font-display: var(--font-baloo);
+  --font-sans: var(--font-baloo);
 
-  --shadow-brutal: 5px 5px 0 #0a0a0a;
-  --shadow-brutal-sm: 3px 3px 0 #0a0a0a;
+  /* Glows: colored shadows belong only to their own accent's elements. */
+  --shadow-glow-plasma: 0 0 26px rgb(255 62 165 / 0.5);
+  --shadow-glow-pulse: 0 0 22px rgb(38 240 229 / 0.4);
+  --shadow-glow-gold: 0 0 18px rgb(255 201 60 / 0.5);
 
-  --tracking-display: 0.02em;
+  --tracking-display: 0.01em;
 }
 
 /* Extract load-bearing class combos once they repeat 3+ times across styles.ts
  * files. Keep this list short — if a pattern only appears twice, inline it. */
 
-@utility brutalist-sm {
-  @apply border-[2.5px] border-ink rounded-[10px] shadow-brutal-sm;
+/* Volt card chrome. */
+@utility card-volt {
+  @apply border border-edge rounded-2xl bg-panel;
 }
 
-@utility brutalist-md {
-  @apply border-[3px] border-ink rounded-xl shadow-brutal;
+@utility card-volt-sm {
+  @apply border border-edge rounded-xl bg-panel;
 }
 
 @utility kicker {
-  @apply text-[10px] font-black uppercase tracking-widest;
+  @apply text-[10px] font-extrabold uppercase tracking-widest;
 }
 
 @utility display {
-  @apply font-display tracking-display;
+  @apply font-display font-extrabold tracking-display;
 }
 
 body {
-  color: var(--color-ink);
-  background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--color-glow);
+  background-color: var(--color-void);
+  background-image: radial-gradient(
+    120% 60% at 50% -10%,
+    #2a1550 0%,
+    transparent 60%
+  );
+  background-repeat: no-repeat;
   font-family: var(--font-sans), system-ui, sans-serif;
 }

@@ -1,10 +1,11 @@
-export const md = "brutalist-md";
-export const sm = "brutalist-sm";
+export const md = "card-volt";
+export const sm = "card-volt-sm";
 
+// panel and muted are both panel surfaces — differentiation comes from
+// content, not card color. plasma is the identity/action surface.
 export const variant = {
-  white: "bg-white text-ink",
-  lime: "bg-lime text-ink",
-  black: "bg-ink text-lime",
-  cream: "bg-cream text-ink",
-  urgent: "bg-urgent text-white",
+  panel: "text-glow",
+  plasma:
+    "bg-gradient-to-br from-plasma-pink to-plasma-violet border-transparent text-glow",
+  muted: "bg-panel/60 text-dust",
 } as const;

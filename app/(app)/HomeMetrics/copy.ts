@@ -1,5 +1,6 @@
 export const homeMetricsCopy = {
-  coverageKicker: "This Week",
+  streakSuffix: "-day streak",
+  coverageKicker: "Weekly quest",
   coverageOf: "of 6",
   coverageSuffix: "muscle\ngroups\nhit",
   statWorkouts: "Workouts",

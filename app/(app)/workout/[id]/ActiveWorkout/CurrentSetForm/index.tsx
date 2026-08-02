@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent, type JSX } from "react";
-import { Card } from "@/components/ui/Card";
 import { getDb } from "@/lib/db/dexie";
 import { newId } from "@/lib/db/ids";
 import { drainQueue, enqueue, type LogSetPayload } from "@/lib/db/queue";
@@ -79,7 +78,7 @@ export const CurrentSetForm = ({
   };
 
   return (
-    <Card variant="lime" className={styles.card}>
+    <div className={styles.card}>
       <form id={formId} onSubmit={onSubmit}>
         <div className={styles.header}>
           <span className={styles.setNumber}>{nextSetNumber}</span>
@@ -140,6 +139,6 @@ export const CurrentSetForm = ({
           </p>
         )}
       </form>
-    </Card>
+    </div>
   );
 };

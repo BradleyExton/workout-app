@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Card } from "@/components/ui/Card";
 import { PipRow } from "@/components/ui/PipRow";
-import { Mascot } from "@/components/mascot/Mascot";
 import { getDb } from "@/lib/db/dexie";
 import { homeCardioCopy } from "./copy";
 import * as styles from "./styles";
@@ -60,7 +59,17 @@ export const HomeCardioCard = ({
   return (
     <Link href="/cardio/new" className={styles.cardioLink}>
       <Card size="sm" className={styles.cardioCard}>
-        <Mascot kind="run" className={styles.cardioMascot} />
+        <span className={styles.cardioIconWrap}>
+          <svg viewBox="0 0 24 24" fill="none" className={styles.cardioIcon} aria-hidden>
+            <path
+              d="M4 12h4l2-5 4 10 2-5h4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
         <div className={styles.cardioBody}>
           <div className={styles.cardioTopRow}>
             <p className={styles.cardioTitle}>{homeCardioCopy.title}</p>

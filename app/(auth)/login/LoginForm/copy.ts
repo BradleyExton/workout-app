@@ -1,4 +1,5 @@
 export const loginCopy = {
+  kicker: "Workout",
   heading: "Log in",
   subheading: "Sign in with your Google account to continue.",
   submit: "Sign in with Google",

@@ -1,3 +1,3 @@
 export const homeAchievementsCopy = {
-  kicker: "Recent unlocks",
+  kicker: "Latest loot",
 } as const;

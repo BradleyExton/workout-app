@@ -87,7 +87,7 @@ export const InstallPrompt = (): JSX.Element | null => {
   if (!deferred && !showIosHint) return null;
 
   return (
-    <Card variant="cream" size="sm" className={styles.card}>
+    <Card variant="muted" size="sm" className={styles.card}>
       <div className={styles.row}>
         <div className={styles.text}>
           <p className={styles.kicker}>{installPromptCopy.kicker}</p>
