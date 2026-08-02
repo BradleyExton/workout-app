@@ -8,7 +8,7 @@ import { formatWeight } from "@/lib/format/weight";
 import { formatVolume } from "@/lib/format/volume";
 import { relativeDays } from "@/lib/format/time";
 import { CurrentSetForm } from "./CurrentSetForm";
-import { FinishControls } from "./FinishControls";
+import { FinishControls, type FinishFlow } from "./FinishControls";
 import { SetList } from "./SetList";
 import { activeWorkoutCopy } from "./copy";
 import * as styles from "./styles";
@@ -69,6 +69,7 @@ type ActiveWorkoutProps = {
   setPrFlags: Record<string, SetPrFlags>;
   todayItems: TodayItem[];
   stats: { sets: number; exercises: number; volume: number };
+  finishFlow: FinishFlow;
 };
 
 export const ActiveWorkout = ({
@@ -80,9 +81,18 @@ export const ActiveWorkout = ({
   setPrFlags,
   todayItems,
   stats,
+  finishFlow,
 }: ActiveWorkoutProps): JSX.Element => {
   const startedAtMs = new Date(workout.started_at).getTime();
   const nextSetNumber = (currentSets.at(-1)?.set_number ?? 0) + 1;
+
+  // Last session's set count is the only target we have until the XP
+  // economy lands. TODO(xp): replace with workout-level quest progress.
+  const targetSets =
+    lastSession && lastSession.sets.length > 0 ? lastSession.sets.length : null;
+  const progressPct = targetSets
+    ? Math.min(100, Math.round((currentSets.length / targetSets) * 100))
+    : null;
 
   const lastInWorkout = currentSets.at(-1);
   const lastInPrev = lastSession?.sets.at(-1);
@@ -114,6 +124,7 @@ export const ActiveWorkout = ({
           startedAtMs={startedAtMs}
           setsCount={stats.sets}
           volume={stats.volume}
+          finishFlow={finishFlow}
           buttonClassName={styles.finishBtn}
           buttonLabel={activeWorkoutCopy.finish}
         />
@@ -127,11 +138,29 @@ export const ActiveWorkout = ({
                 {current.exercise.primary_muscle}
               </span>
               <span className={styles.setLabel}>
-                {activeWorkoutCopy.currentSetLabel(nextSetNumber)}
+                {activeWorkoutCopy.currentSetLabel(
+                  nextSetNumber,
+                  targetSets ?? undefined,
+                )}
               </span>
             </div>
             <h2 className={styles.exerciseName}>{current.exercise.name}</h2>
           </Card>
+
+          {progressPct !== null && (
+            <div className={styles.progressBlock}>
+              <div className={styles.progressLabelRow}>
+                <span>{activeWorkoutCopy.progressLabel}</span>
+                <span>{activeWorkoutCopy.progressPct(progressPct)}</span>
+              </div>
+              <div className={styles.progressTrack}>
+                <div
+                  className={styles.progressFill}
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {(lastSession && lastSession.sets.length > 0) ||
           prs.oneRm !== null ||
@@ -261,7 +290,7 @@ export const ActiveWorkout = ({
             <button
               type="submit"
               form={CURRENT_SET_FORM_ID}
-              className={`${styles.ctaInner} ${buttonStyles.variant.primary}`}
+              className={`${styles.ctaInner} ${buttonStyles.variant.pulse}`}
             >
               {activeWorkoutCopy.logSet}
             </button>

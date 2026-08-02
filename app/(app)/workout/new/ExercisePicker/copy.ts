@@ -1,6 +1,6 @@
 export const pickerCopy = {
   back: "← Back",
-  title: "ADD EXERCISE",
+  title: "Choose exercise",
   searchPlaceholder: "Search exercises…",
   allFilter: "All",
   empty: "No matches.",

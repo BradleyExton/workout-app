@@ -32,7 +32,9 @@ mockups: https://claude.ai/code/artifact/b9c2c15a-ff33-4d2f-9a70-8931f92aae34
 
 - ✅ Phase 1: tokens, fonts, shared UI (`Card`, `Button`, `PipRow`, `TabBar`,
   `Modal`), Home screen.
-- ⏳ Not yet migrated: workout flow, cardio, history, profile, login, offline.
+- ✅ Phase 2: workout flow (exercise picker, active workout, finish modal,
+  workout-complete screen) and cardio logging.
+- ⏳ Not yet migrated: history, profile, login, offline.
   These lean on **legacy alias tokens** (`ink`, `lime`, `paper`, `cream`,
   `urgent`, and a remapped `white`) declared in `globals.css` — scaffolding
   that keeps them readable on the dark ground. Delete the aliases once every

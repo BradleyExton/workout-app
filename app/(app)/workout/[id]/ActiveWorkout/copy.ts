@@ -2,9 +2,14 @@ export const activeWorkoutCopy = {
   back: "← Back",
   finish: "Finish",
   emptyHint: "No exercises yet. Tap Add Exercise.",
-  currentSetLabel: (n: number): string => `SET ${n}`,
+  currentSetLabel: (n: number, of?: number): string =>
+    of ? `SET ${n} OF ${of}` : `SET ${n}`,
   setRowCheck: "✓",
-  logSet: "LOG SET →",
+  progressLabel: "Exercise progress",
+  progressPct: (pct: number): string => `${pct}%`,
+  // TODO(xp): append the set's XP payout ("Complete set · +20 XP") once
+  // the XP economy phase lands.
+  logSet: "COMPLETE SET",
   lastSessionPrefix: "Last session ·",
   prLabel: "Personal records",
   pr1rm: "1RM",

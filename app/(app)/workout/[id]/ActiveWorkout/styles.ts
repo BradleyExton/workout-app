@@ -1,59 +1,63 @@
-export const page = "flex min-h-dvh flex-col gap-3 px-4 pb-32 pt-4";
+export const page = "flex min-h-dvh flex-col gap-3 px-4 pb-44 pt-4";
 
 export const topBar = "flex items-center justify-between";
-export const back = "text-xs font-bold uppercase tracking-wide opacity-60 px-2 py-1.5";
+export const back = "kicker text-dust px-2 py-1.5";
 export const timerPill =
-  "flex items-center gap-2 brutalist-sm bg-ink text-lime px-3 py-1.5";
-export const timerDot = "w-2 h-2 rounded-full bg-lime shadow-[0_0_8px_#c8ff2d]";
-export const timerText = "display text-sm";
+  "flex items-center gap-2 rounded-full border border-pulse/40 bg-panel px-3 py-1.5 text-pulse";
+export const timerDot = "w-2 h-2 rounded-full bg-pulse shadow-glow-pulse";
+export const timerText = "display text-sm tabular-nums";
 export const finishBtn =
-  "border-[2px] border-ink rounded-lg bg-white text-ink px-3 py-1.5 text-xs font-black uppercase tracking-widest disabled:opacity-50";
+  "border border-edge rounded-full bg-panel text-dust px-3 py-1.5 text-xs font-extrabold uppercase tracking-widest disabled:opacity-50";
 
 export const hero = "p-4";
 export const heroRow = "flex items-center justify-between";
-export const groupBadge =
-  "kicker bg-ink text-white px-2 py-0.5 rounded-full border-2 border-ink";
-export const setLabel = "text-[10px] font-black";
+export const groupBadge = "kicker rounded-full bg-void/25 px-2.5 py-1";
+export const setLabel = "text-[10px] font-extrabold tracking-widest";
 export const exerciseName = "display text-3xl leading-none mt-2";
+
+export const progressBlock = "mt-1";
+export const progressLabelRow =
+  "flex items-center justify-between kicker text-dust mb-1.5";
+export const progressTrack =
+  "h-3 rounded-full border border-edge bg-void/60 overflow-hidden";
+export const progressFill =
+  "h-full rounded-full bg-gradient-to-r from-plasma-pink via-plasma-violet to-pulse";
 
 export const lastSessionCard = "p-3";
 export const lastSessionHeader = "flex items-center justify-between mb-2";
-export const lastSessionLabel = "kicker opacity-70";
-export const lastSessionPills = "flex gap-1.5 flex-wrap text-sm font-bold";
-export const lastSessionPill = "bg-white border-2 border-ink px-2 py-1 rounded";
+export const lastSessionLabel = "kicker";
+export const lastSessionPills = "flex gap-1.5 flex-wrap";
+export const lastSessionPill =
+  "rounded-full border border-edge bg-panel px-2.5 py-1 text-xs font-bold text-glow tabular-nums";
 
-export const prRow = "mt-2 pt-2 border-t-2 border-ink/20";
-export const prLabel = "kicker opacity-70 mb-2";
-export const prPills = "flex gap-1.5 flex-wrap text-xs font-bold";
+export const prRow = "mt-2 pt-2 border-t border-edge";
+export const prLabel = "kicker mb-2";
+export const prPills = "flex gap-1.5 flex-wrap";
 export const prPill =
-  "bg-lime border-2 border-ink px-2 py-1 rounded flex items-center gap-1";
+  "rounded-full border border-pulse/40 px-2.5 py-1 text-xs font-bold text-pulse flex items-center gap-1 tabular-nums";
 export const prPillKey = "text-[9px] opacity-70";
-export const prPillValue = "font-black";
+export const prPillValue = "font-extrabold";
 
 export const setList = "flex flex-col gap-2";
-export const setRow = "p-3 flex items-center gap-3";
-export const setRowNumber = "display text-lg w-7 text-center";
-export const setRowValue = "font-bold flex-1";
-export const setRowCheck =
-  "w-6 h-6 rounded-full bg-lime border-2 border-ink flex items-center justify-center text-xs font-black";
 
 export const statsCard = "p-3";
-export const statsLabel = "kicker opacity-70 mb-2";
+export const statsLabel = "kicker mb-2";
 export const statsGrid = "grid grid-cols-3 gap-2 text-center";
-export const statValue = "display text-xl";
-export const statKey = "text-[9px] font-bold uppercase opacity-60";
+export const statValue =
+  "display text-xl leading-none text-pulse [text-shadow:0_0_12px_rgba(38,240,229,0.5)]";
+export const statKey = "text-[9px] font-extrabold uppercase text-dust mt-1";
 
 export const todaySection = "mt-1";
-export const todayLabel = "kicker opacity-70 mb-2";
+export const todayLabel = "kicker text-dust mb-2";
 export const todayList = "flex flex-col gap-2";
 export const todayRow = "px-2.5 py-2.5 flex items-center justify-between";
-export const todayName = "font-bold text-sm";
-export const todayStats = "text-[10px] font-bold opacity-70";
+export const todayName = "font-extrabold text-sm";
+export const todayStats = "text-[10px] font-bold text-dust";
 export const addExerciseBtn =
-  "mt-2 block w-full border-[2px] border-dashed border-ink rounded-lg py-3 text-xs font-black uppercase tracking-widest text-ink text-center";
+  "mt-2 block w-full border border-dashed border-edge rounded-xl py-3 text-xs font-extrabold uppercase tracking-widest text-dust text-center";
 
-export const empty = "text-sm font-semibold opacity-60 text-center py-8";
+export const empty = "text-sm font-semibold text-dust text-center py-8";
 
 export const ctaZone =
-  "fixed left-0 right-0 bottom-0 px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-paper/95 to-paper pointer-events-none";
+  "fixed left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] px-4 pt-7 pb-4 bg-gradient-to-b from-transparent via-void/95 to-void pointer-events-none";
 export const ctaInner = "pointer-events-auto";

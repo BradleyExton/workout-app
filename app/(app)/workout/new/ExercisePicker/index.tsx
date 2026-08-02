@@ -126,13 +126,29 @@ export const ExercisePicker = ({
       </Link>
       <h1 className={styles.title}>{pickerCopy.title}</h1>
 
-      <input
-        className={styles.search}
-        type="search"
-        placeholder={pickerCopy.searchPlaceholder}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-      />
+      <div className={styles.searchWrap}>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          className={styles.searchIcon}
+          aria-hidden
+        >
+          <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M15 15l5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <input
+          className={styles.search}
+          type="search"
+          placeholder={pickerCopy.searchPlaceholder}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
 
       <div className={styles.chipRow}>
         {filters.map((value) => {

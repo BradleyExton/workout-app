@@ -8,11 +8,11 @@ import * as buttonStyles from "@/components/ui/Button/styles";
 import { getDb } from "@/lib/db/dexie";
 import { drainQueue, enqueue } from "@/lib/db/queue";
 import { formatVolume } from "@/lib/format/volume";
-import { formatWeight } from "@/lib/format/weight";
 import {
   getWorkoutUnlocks,
   type WorkoutUnlocks,
 } from "../../actions";
+import type { FinishFlow } from "../FinishControls";
 import { finishModalCopy } from "./copy";
 import * as styles from "./styles";
 
@@ -23,16 +23,10 @@ type FinishModalProps = {
   startedAtMs: number;
   setsCount: number;
   volume: number;
+  finishFlow: FinishFlow;
 };
 
-const formatPrValue = (
-  type: "1rm" | "volume" | "reps",
-  value: number,
-): string => {
-  if (type === "volume") return formatVolume(value);
-  if (type === "reps") return `${value} reps`;
-  return `${formatWeight(value)} kg`;
-};
+const EMPTY_UNLOCKS: WorkoutUnlocks = { newPrs: [], newAchievements: [] };
 
 export const FinishModal = ({
   open,
@@ -41,17 +35,22 @@ export const FinishModal = ({
   startedAtMs,
   setsCount,
   volume,
+  finishFlow,
 }: FinishModalProps): JSX.Element => {
   const [, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
   const [drainFailed, setDrainFailed] = useState(false);
-  const [unlocks, setUnlocks] = useState<WorkoutUnlocks | null>(null);
   const router = useRouter();
 
   const onFinish = (): void => {
+    // Outside the transition: once the Dexie write lands, the Hydrator
+    // must already know this finish is ours, or it redirects home.
+    // Inside startTransition this update is deferred and loses that race.
+    finishFlow.onStart();
     startTransition(async () => {
       setSaving(true);
       const finishedAt = new Date().toISOString();
+      const durationMs = Date.now() - startedAtMs;
       const db = getDb();
       const existing = await db.workouts.get(workoutId);
       if (existing) {
@@ -63,12 +62,12 @@ export const FinishModal = ({
       });
 
       // Await the drain so PR + achievement detection runs before we
-      // fetch unlocks. If offline, drain reports 0 succeeded and we fall
-      // through to redirect without the unlock screen — home will still
-      // show the badges once the queue catches up.
+      // fetch unlocks. If offline, the complete screen still celebrates
+      // with local stats — home will show the badges once the queue
+      // catches up.
       const online = typeof navigator === "undefined" || navigator.onLine;
       if (!online) {
-        router.push("/");
+        finishFlow.onComplete({ unlocks: EMPTY_UNLOCKS, durationMs });
         return;
       }
 
@@ -86,19 +85,13 @@ export const FinishModal = ({
         return;
       }
 
+      let unlocks = EMPTY_UNLOCKS;
       try {
-        const result = await getWorkoutUnlocks(workoutId);
-        const hasAny =
-          result.newPrs.length > 0 || result.newAchievements.length > 0;
-        if (!hasAny) {
-          router.push("/");
-          return;
-        }
-        setUnlocks(result);
-        setSaving(false);
+        unlocks = await getWorkoutUnlocks(workoutId);
       } catch {
-        router.push("/");
+        // Best-effort — celebrate without badges rather than skip the screen.
       }
+      finishFlow.onComplete({ unlocks, durationMs });
     });
   };
 
@@ -132,52 +125,6 @@ export const FinishModal = ({
       router.push("/");
     });
   };
-
-  if (unlocks) {
-    return (
-      <Modal open={open} onClose={onContinue}>
-        <div className={styles.header}>
-          <div>
-            <p className={styles.unlocksKicker}>
-              {finishModalCopy.unlocksKicker}
-            </p>
-            <h3 className={styles.unlocksTitle}>
-              {finishModalCopy.unlocksTitle}
-            </h3>
-          </div>
-        </div>
-        <div className={styles.unlocksSection}>
-          {unlocks.newPrs.map((pr, i) => (
-            <div key={`pr-${i}`} className={styles.unlockRow}>
-              <span className={styles.unlockTag}>
-                {finishModalCopy.newPrLabel}
-              </span>
-              <span className={styles.unlockBody}>
-                {pr.exercise_name} · {finishModalCopy.prTypeLabel[pr.pr_type]}{" "}
-                {formatPrValue(pr.pr_type, pr.value)}
-              </span>
-            </div>
-          ))}
-          {unlocks.newAchievements.map((a) => (
-            <div key={a.slug} className={styles.unlockRow}>
-              {a.icon && <span className={styles.unlockIcon}>{a.icon}</span>}
-              <span className={styles.unlockTag}>
-                {finishModalCopy.unlockedLabel}
-              </span>
-              <span className={styles.unlockBody}>{a.title}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          className={`${buttonStyles.variant.primary} ${styles.primaryCta}`}
-          onClick={onContinue}
-        >
-          {finishModalCopy.continueCta}
-        </button>
-      </Modal>
-    );
-  }
 
   return (
     <Modal open={open} onClose={onClose}>
