@@ -23,16 +23,32 @@ export type AchievementStats = {
   lifetimeVolume: number;
 };
 
-const rules: Record<AchievementSlug, (s: AchievementStats) => boolean> = {
-  first_workout: (s) => s.workoutsFinished >= 1,
-  ten_workouts: (s) => s.workoutsFinished >= 10,
-  fifty_workouts: (s) => s.workoutsFinished >= 50,
-  streak_week: (s) => s.streakDays >= 7,
-  first_pr: (s) => s.prCount >= 1,
-  ten_prs: (s) => s.prCount >= 10,
-  full_body_week: (s) => s.muscleGroupsThisWeek >= 6,
-  volume_10k: (s) => s.lifetimeVolume >= 10_000,
+export type AchievementMetric = keyof AchievementStats;
+
+export type AchievementRequirement = {
+  metric: AchievementMetric;
+  threshold: number;
 };
+
+// The single source of truth for "what unlocks this". Both the unlock check
+// below and any UI that tells the user what to aim for read these numbers,
+// so a threshold change can't leave the copy describing the old rule.
+export const ACHIEVEMENT_REQUIREMENTS: Record<
+  AchievementSlug,
+  AchievementRequirement
+> = {
+  first_workout: { metric: "workoutsFinished", threshold: 1 },
+  ten_workouts: { metric: "workoutsFinished", threshold: 10 },
+  fifty_workouts: { metric: "workoutsFinished", threshold: 50 },
+  streak_week: { metric: "streakDays", threshold: 7 },
+  first_pr: { metric: "prCount", threshold: 1 },
+  ten_prs: { metric: "prCount", threshold: 10 },
+  full_body_week: { metric: "muscleGroupsThisWeek", threshold: 6 },
+  volume_10k: { metric: "lifetimeVolume", threshold: 10_000 },
+};
+
+export const isAchievementSlug = (value: string): value is AchievementSlug =>
+  (ACHIEVEMENT_SLUGS as readonly string[]).includes(value);
 
 export const detectUnlocks = (
   stats: AchievementStats,
@@ -42,7 +58,53 @@ export const detectUnlocks = (
   const out: AchievementSlug[] = [];
   for (const slug of ACHIEVEMENT_SLUGS) {
     if (unlocked.has(slug)) continue;
-    if (rules[slug](stats)) out.push(slug);
+    const { metric, threshold } = ACHIEVEMENT_REQUIREMENTS[slug];
+    if (stats[metric] >= threshold) out.push(slug);
   }
   return out;
+};
+
+export type AchievementProgress = {
+  slug: AchievementSlug;
+  metric: AchievementMetric;
+  current: number;
+  threshold: number;
+  /** 0–1, clamped. */
+  ratio: number;
+};
+
+// Stats are partial because not every caller can afford to measure every
+// metric (lifetime volume means scanning every set). An unmeasured metric
+// yields null rather than a made-up zero.
+export const achievementProgress = (
+  slug: AchievementSlug,
+  stats: Partial<AchievementStats>,
+): AchievementProgress | null => {
+  const { metric, threshold } = ACHIEVEMENT_REQUIREMENTS[slug];
+  const current = stats[metric];
+  if (current === undefined) return null;
+  return {
+    slug,
+    metric,
+    current,
+    threshold,
+    ratio: Math.min(1, Math.max(0, current / threshold)),
+  };
+};
+
+// The locked badge the user is closest to, among the metrics the caller
+// could measure. Ties break on ACHIEVEMENT_SLUGS order (cheapest first).
+export const nearestLockedAchievement = (
+  lockedSlugs: readonly AchievementSlug[],
+  stats: Partial<AchievementStats>,
+): AchievementProgress | null => {
+  const locked = new Set<AchievementSlug>(lockedSlugs);
+  let best: AchievementProgress | null = null;
+  for (const slug of ACHIEVEMENT_SLUGS) {
+    if (!locked.has(slug)) continue;
+    const progress = achievementProgress(slug, stats);
+    if (!progress) continue;
+    if (!best || progress.ratio > best.ratio) best = progress;
+  }
+  return best;
 };

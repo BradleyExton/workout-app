@@ -1,23 +1,25 @@
 import type { JSX } from "react";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
+import {
+  ACHIEVEMENT_REQUIREMENTS,
+  isAchievementSlug,
+  nearestLockedAchievement,
+} from "@/lib/domain/achievements";
 import { LogoutButton } from "./LogoutButton";
 import { profileCopy } from "./copy";
 import * as styles from "./styles";
 
-// TODO(xp): level number is a hardcoded placeholder. The XP economy phase
-// derives it from existing rows (sets / workouts / cardio_sessions /
-// user_achievements) — level N needs 100 × N XP. No new table, no new query.
-const PLACEHOLDER_LEVEL = 1;
-
-// TODO(xp): XP progress-bar fill is a hardcoded placeholder for the same
-// reason — replace with (totalXp - levelFloor) / levelSpan once XP exists.
-const PLACEHOLDER_XP_CURRENT = 35;
-const PLACEHOLDER_XP_NEXT = 100;
-const PLACEHOLDER_XP_PCT = 35;
+// TODO(xp): this screen used to show a hardcoded "LV 1" chip and a 35/100 XP
+// bar for an economy that doesn't exist yet. Both are gone; the slot now
+// shows real progress toward the next badge. When the XP phase lands (level N
+// needs 100 × N XP, derived from sets / workouts / cardio_sessions /
+// user_achievements — no new table), the level chip and XP bar come back here
+// driven by real totals.
 
 type AchievementRow = {
   id: string;
+  slug: string;
   title: string;
   icon: string | null;
 };
@@ -37,6 +39,12 @@ const formatSince = (createdAt: string | undefined): string | null => {
   return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 };
 
+const conditionFor = (slug: string): string | null => {
+  if (!isAchievementSlug(slug)) return null;
+  const { metric, threshold } = ACHIEVEMENT_REQUIREMENTS[slug];
+  return profileCopy.badgeCondition(metric, threshold);
+};
+
 const LockIcon = (): JSX.Element => (
   <svg viewBox="0 0 24 24" fill="none" className={styles.badgeLockIcon} aria-hidden>
     <rect x="6" y="10" width="12" height="9" rx="2" fill="currentColor" />
@@ -53,6 +61,7 @@ export default async function ProfilePage(): Promise<JSX.Element> {
   const [
     { count: workoutCount },
     { count: cardioCount },
+    { count: prCount },
     { data: achievements },
     { data: unlockRows },
   ] = await Promise.all([
@@ -61,7 +70,11 @@ export default async function ProfilePage(): Promise<JSX.Element> {
       .select("id", { count: "exact", head: true })
       .not("finished_at", "is", null),
     supabase.from("cardio_sessions").select("id", { count: "exact", head: true }),
-    supabase.from("achievements").select("id, title, icon").order("slug"),
+    // Cheap enough to fetch here, and it unlocks progress for the PR badges.
+    // Streak / muscle-group / lifetime-volume stats are deliberately not
+    // measured on this screen — they'd cost a full scan of `sets`.
+    supabase.from("personal_records").select("id", { count: "exact", head: true }),
+    supabase.from("achievements").select("id, slug, title, icon").order("slug"),
     supabase
       .from("user_achievements")
       .select("achievement_id, unlocked_at")
@@ -79,6 +92,32 @@ export default async function ProfilePage(): Promise<JSX.Element> {
     ...catalogue.filter((a) => !unlockedIds.has(a.id)),
   ];
 
+  const lockedSlugs = catalogue
+    .filter((a) => !unlockedIds.has(a.id))
+    .map((a) => a.slug)
+    .filter(isAchievementSlug);
+
+  // Only the metrics this page actually measured go in — the rest stay
+  // absent so no badge gets a fabricated "0 / 10".
+  const nextBadge = nearestLockedAchievement(lockedSlugs, {
+    workoutsFinished: workoutCount ?? 0,
+    prCount: prCount ?? 0,
+  });
+  const nextBadgeRow = nextBadge
+    ? (catalogue.find((a) => a.slug === nextBadge.slug) ?? null)
+    : null;
+  // Nothing measurable left to chase: either the case is complete, or the
+  // only badges left run on stats this screen doesn't compute. Fall back to
+  // the first locked badge so the slot still points somewhere real.
+  const fallbackLocked =
+    !nextBadgeRow && lockedSlugs.length > 0
+      ? (catalogue.find(
+          (a) => !unlockedIds.has(a.id) && isAchievementSlug(a.slug),
+        ) ?? null)
+      : null;
+  const targetRow = nextBadgeRow ?? fallbackLocked;
+  const targetCondition = targetRow ? conditionFor(targetRow.slug) : null;
+
   const displayName = deriveName(user?.email);
   const since = formatSince(user?.created_at);
 
@@ -87,16 +126,10 @@ export default async function ProfilePage(): Promise<JSX.Element> {
       <h1 className={styles.srTitle}>{profileCopy.title}</h1>
 
       <div className={styles.identity}>
-        <div className={styles.avatarWrap}>
-          <div className={styles.avatar}>
-            <span className={styles.avatarMonogram}>
-              {displayName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className={styles.levelChip}>
-            <span className={styles.levelKicker}>{profileCopy.levelKicker}</span>
-            <span className={styles.levelValue}>{PLACEHOLDER_LEVEL}</span>
-          </div>
+        <div className={styles.avatar}>
+          <span className={styles.avatarMonogram}>
+            {displayName.charAt(0).toUpperCase()}
+          </span>
         </div>
         <div className={styles.identityText}>
           <span className={styles.name}>{displayName}</span>
@@ -107,19 +140,50 @@ export default async function ProfilePage(): Promise<JSX.Element> {
         </div>
       </div>
 
-      <div className={styles.xpBlock}>
-        <div className={styles.xpLabelRow}>
-          <span>{profileCopy.xpLabel}</span>
-          <span className={styles.xpValue}>
-            {profileCopy.xpValue(PLACEHOLDER_XP_CURRENT, PLACEHOLDER_XP_NEXT)}
-          </span>
+      {catalogue.length > 0 && (
+        <div className={styles.nextBlock}>
+          <div className={styles.nextLabelRow}>
+            <span>{profileCopy.nextBadgeKicker}</span>
+            {nextBadge && (
+              <span className={styles.nextValue}>
+                {profileCopy.nextBadgeProgress(
+                  nextBadge.current,
+                  nextBadge.threshold,
+                )}
+              </span>
+            )}
+          </div>
+          <div className={styles.nextTarget}>
+            <span className={styles.nextIcon} aria-hidden>
+              {targetRow
+                ? (targetRow.icon ?? "🏅")
+                : profileCopy.nextBadgeAllDoneIcon}
+            </span>
+            <span className={targetRow ? styles.nextName : styles.nextNameDone}>
+              {targetRow ? targetRow.title : profileCopy.nextBadgeAllDone}
+            </span>
+          </div>
+          {nextBadge && (
+            <div
+              className={styles.nextTrack}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={nextBadge.threshold}
+              aria-valuenow={nextBadge.current}
+              aria-label={profileCopy.nextBadgeKicker}
+            >
+              <div
+                className={styles.nextFill}
+                style={{ width: `${Math.round(nextBadge.ratio * 100)}%` }}
+              />
+            </div>
+          )}
+          {targetCondition && (
+            <p className={styles.nextCondition}>{targetCondition}</p>
+          )}
+          <p className={styles.nextNote}>{profileCopy.xpSoonNote}</p>
         </div>
-        <div className={styles.xpTrack}>
-          {/* TODO(xp): placeholder width — drive from real XP totals. */}
-          <div className={styles.xpFill} style={{ width: `${PLACEHOLDER_XP_PCT}%` }} />
-        </div>
-        <p className={styles.xpNote}>{profileCopy.xpPreviewNote}</p>
-      </div>
+      )}
 
       <div className={styles.statsRow}>
         <Card variant="panel" size="sm" className={styles.statCard}>
@@ -143,38 +207,49 @@ export default async function ProfilePage(): Promise<JSX.Element> {
         {badges.length === 0 ? (
           <p className={styles.trophyEmpty}>{profileCopy.trophyEmpty}</p>
         ) : (
-          <div className={styles.trophyGrid}>
+          <ul className={styles.trophyGrid}>
             {badges.map((badge) => {
               const unlocked = unlockedIds.has(badge.id);
+              const isLatest = unlocked && badge.id === latestUnlockId;
               const tone = !unlocked
-                ? styles.badgeLocked
-                : badge.id === latestUnlockId
-                  ? styles.badgeLatest
-                  : styles.badgeUnlocked;
+                ? styles.tileLocked
+                : isLatest
+                  ? styles.tileLatest
+                  : styles.tileUnlocked;
+              const medalTone = !unlocked
+                ? styles.medalLocked
+                : isLatest
+                  ? styles.medalLatest
+                  : styles.medalUnlocked;
+              const condition = unlocked ? null : conditionFor(badge.slug);
               return (
-                <div
-                  key={badge.id}
-                  className={`${styles.badgeBase} ${tone}`}
-                  aria-label={
-                    unlocked
-                      ? profileCopy.badgeUnlockedLabel(badge.title)
-                      : profileCopy.badgeLockedLabel(badge.title)
-                  }
-                  title={
-                    unlocked
-                      ? profileCopy.badgeUnlockedLabel(badge.title)
-                      : profileCopy.badgeLockedLabel(badge.title)
-                  }
-                >
-                  {unlocked ? (
-                    <span aria-hidden>{badge.icon ?? "🏅"}</span>
-                  ) : (
-                    <LockIcon />
+                <li key={badge.id} className={`${styles.tileBase} ${tone}`}>
+                  <span className={`${styles.medalBase} ${medalTone}`}>
+                    {unlocked ? (
+                      <span aria-hidden>{badge.icon ?? "🏅"}</span>
+                    ) : (
+                      <LockIcon />
+                    )}
+                  </span>
+                  <span
+                    className={unlocked ? styles.badgeName : styles.badgeNameLocked}
+                  >
+                    {badge.title}
+                  </span>
+                  {/* Sighted users read the lock glyph and the dimmed tile;
+                      this carries the same state to screen readers. */}
+                  <span className={styles.srOnly}>
+                    {unlocked
+                      ? profileCopy.badgeUnlockedState
+                      : profileCopy.badgeLockedState}
+                  </span>
+                  {condition && (
+                    <span className={styles.badgeCondition}>{condition}</span>
                   )}
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
       </Card>
 
