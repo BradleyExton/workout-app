@@ -5,7 +5,10 @@ export const screen =
 export const inner =
   "flex min-h-full w-full max-w-md mx-auto flex-col gap-3 px-4 pt-10 pb-8";
 
-export const burst = "text-center py-6";
+// mt-auto here + mt-auto on the CTA splits the leftover space evenly, so
+// a short summary floats centered instead of hugging the top with a void
+// below it.
+export const burst = "text-center py-6 mt-auto";
 export const burstKicker =
   "kicker text-pulse [text-shadow:0_0_14px_rgba(38,240,229,0.6)]";
 export const burstTitle = "display text-5xl leading-tight mt-2";
@@ -31,4 +34,4 @@ export const badgeCoin =
 export const badgeKicker = "kicker text-gold";
 export const badgeTitle = "text-sm font-extrabold leading-tight mt-0.5";
 
-export const cta = "mt-auto";
+export const cta = "mt-auto pt-4";
