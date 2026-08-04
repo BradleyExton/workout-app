@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"/Users/bradleyexton/Projects/claude-dev-system/tools/hooks/verify-stop.ts\"",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON \"/Users/bradleyexton/Projects/claude-dev-system/tools/hooks/push-gate.ts\""
+          }
+        ]
+      }
+    ]
+  }
+}
