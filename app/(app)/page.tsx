@@ -67,7 +67,7 @@ export default async function HomePage(): Promise<JSX.Element> {
       .gte("started_at", since30),
     supabase
       .from("user_achievements")
-      .select("unlocked_at, achievement:achievements!inner(slug, title, icon)")
+      .select("unlocked_at, achievement:achievements!inner(slug, title)")
       .order("unlocked_at", { ascending: false })
       .limit(3),
     // Lifetime, not windowed: the onboarding card asks "has this account ever
@@ -124,14 +124,14 @@ export default async function HomePage(): Promise<JSX.Element> {
   type UnlockRow = {
     unlocked_at: string;
     achievement:
-      | { slug: string; title: string; icon: string | null }
-      | { slug: string; title: string; icon: string | null }[]
+      | { slug: string; title: string }
+      | { slug: string; title: string }[]
       | null;
   };
   const unlocks = ((recentUnlocks ?? []) as UnlockRow[]).flatMap((row) => {
     const a = Array.isArray(row.achievement) ? row.achievement[0] : row.achievement;
     if (!a) return [];
-    return [{ slug: a.slug, title: a.title, icon: a.icon }];
+    return [{ slug: a.slug, title: a.title }];
   });
 
   const now = currentDate();

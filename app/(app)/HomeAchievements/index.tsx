@@ -1,11 +1,11 @@
 import type { JSX } from "react";
+import { BadgeGlyph } from "@/components/ui/BadgeGlyph";
 import { homeAchievementsCopy } from "./copy";
 import * as styles from "./styles";
 
 type Unlock = {
   slug: string;
   title: string;
-  icon: string | null;
 };
 
 type HomeAchievementsProps = {
@@ -22,7 +22,7 @@ export const HomeAchievements = ({
       <div className={styles.row}>
         {unlocks.map((u) => (
           <div key={u.slug} className={styles.badge}>
-            {u.icon && <span className={styles.icon}>{u.icon}</span>}
+            <BadgeGlyph slug={u.slug} className={styles.icon} />
             <span className={styles.title}>{u.title}</span>
           </div>
         ))}

@@ -476,7 +476,6 @@ export type WorkoutUnlockPr = {
 export type WorkoutUnlockAchievement = {
   slug: string;
   title: string;
-  icon: string | null;
 };
 
 export type WorkoutUnlocks = {
@@ -530,14 +529,14 @@ export const getWorkoutUnlocks = async (
 
   type AckRow = {
     achievement:
-      | { slug: string; title: string; icon: string | null }
-      | { slug: string; title: string; icon: string | null }[]
+      | { slug: string; title: string }
+      | { slug: string; title: string }[]
       | null;
   };
 
   const { data: acksData, error: acksErr } = await supabase
     .from("user_achievements")
-    .select("achievement:achievements!inner(slug, title, icon)")
+    .select("achievement:achievements!inner(slug, title)")
     .eq("user_id", userId)
     .gte("unlocked_at", cutoff);
   if (acksErr) return empty;
@@ -559,7 +558,7 @@ export const getWorkoutUnlocks = async (
   ).flatMap((r) => {
     const a = Array.isArray(r.achievement) ? r.achievement[0] : r.achievement;
     if (!a) return [];
-    return [{ slug: a.slug, title: a.title, icon: a.icon }];
+    return [{ slug: a.slug, title: a.title }];
   });
 
   return { newPrs, newAchievements };

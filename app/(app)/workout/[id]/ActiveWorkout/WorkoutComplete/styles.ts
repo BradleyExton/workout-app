@@ -30,7 +30,8 @@ export const prBody = "text-sm font-bold flex-1 truncate";
 export const badgeRow =
   "rounded-2xl border border-gold/40 bg-panel shadow-glow-gold px-3.5 py-3 flex items-center gap-3";
 export const badgeCoin =
-  "w-12 h-12 rounded-full border border-gold bg-void/40 shadow-glow-gold flex items-center justify-center text-xl flex-shrink-0";
+  "w-12 h-12 rounded-full border border-gold bg-void/40 shadow-glow-gold flex items-center justify-center flex-shrink-0";
+export const badgeGlyph = "w-6 h-6";
 export const badgeKicker = "kicker text-gold";
 export const badgeTitle = "text-sm font-extrabold leading-tight mt-0.5";
 

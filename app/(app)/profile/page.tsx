@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { BadgeGlyph } from "@/components/ui/BadgeGlyph";
 import { Card } from "@/components/ui/Card";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -22,7 +23,6 @@ type AchievementRow = {
   id: string;
   slug: string;
   title: string;
-  icon: string | null;
 };
 
 const deriveName = (email: string | null | undefined): string => {
@@ -46,13 +46,6 @@ const conditionFor = (slug: string): string | null => {
   return profileCopy.badgeCondition(metric, threshold);
 };
 
-const LockIcon = (): JSX.Element => (
-  <svg viewBox="0 0 24 24" fill="none" className={styles.badgeLockIcon} aria-hidden>
-    <rect x="6" y="10" width="12" height="9" rx="2" fill="currentColor" />
-    <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" strokeWidth="2" />
-  </svg>
-);
-
 export default async function ProfilePage(): Promise<JSX.Element> {
   const supabase = await createClient();
   const {
@@ -75,7 +68,7 @@ export default async function ProfilePage(): Promise<JSX.Element> {
     // Streak / muscle-group / lifetime-volume stats are deliberately not
     // measured on this screen — they'd cost a full scan of `sets`.
     supabase.from("personal_records").select("id", { count: "exact", head: true }),
-    supabase.from("achievements").select("id, slug, title, icon").order("slug"),
+    supabase.from("achievements").select("id, slug, title").order("slug"),
     supabase
       .from("user_achievements")
       .select("achievement_id, unlocked_at")
@@ -155,11 +148,17 @@ export default async function ProfilePage(): Promise<JSX.Element> {
             )}
           </div>
           <div className={styles.nextTarget}>
-            <span className={styles.nextIcon} aria-hidden>
-              {targetRow
-                ? (targetRow.icon ?? "🏅")
-                : profileCopy.nextBadgeAllDoneIcon}
-            </span>
+            {targetRow ? (
+              // The chase target is still locked, so its glyph stays a
+              // dust silhouette — the plasma treatment is earned.
+              <BadgeGlyph
+                slug={targetRow.slug}
+                tone="dim"
+                className={styles.nextIcon}
+              />
+            ) : (
+              <BadgeGlyph slug="fifty_workouts" className={styles.nextIcon} />
+            )}
             <span className={targetRow ? styles.nextName : styles.nextNameDone}>
               {targetRow ? targetRow.title : profileCopy.nextBadgeAllDone}
             </span>
@@ -244,18 +243,20 @@ export default async function ProfilePage(): Promise<JSX.Element> {
               return (
                 <li key={badge.id} className={`${styles.tileBase} ${tone}`}>
                   <span className={`${styles.medalBase} ${medalTone}`}>
-                    {unlocked ? (
-                      <span aria-hidden>{badge.icon ?? "🏅"}</span>
-                    ) : (
-                      <LockIcon />
-                    )}
+                    <BadgeGlyph
+                      slug={badge.slug}
+                      tone={unlocked ? "plasma" : "dim"}
+                      className={
+                        unlocked ? styles.badgeGlyph : styles.badgeGlyphLocked
+                      }
+                    />
                   </span>
                   <span
                     className={unlocked ? styles.badgeName : styles.badgeNameLocked}
                   >
                     {badge.title}
                   </span>
-                  {/* Sighted users read the lock glyph and the dimmed tile;
+                  {/* Sighted users read the dimmed silhouette and tile;
                       this carries the same state to screen readers. */}
                   <span className={styles.srOnly}>
                     {unlocked

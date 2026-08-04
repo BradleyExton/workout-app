@@ -20,7 +20,6 @@ export const profileCopy = {
   nextBadgeProgress: (current: number, threshold: number): string =>
     `${current} / ${threshold}`,
   nextBadgeAllDone: "Every badge unlocked. Nothing left to chase.",
-  nextBadgeAllDoneIcon: "🏆",
   xpSoonNote: "XP and levels arrive in a later update.",
   statWorkouts: "Workouts · all time",
   statCardio: "Cardio · all time",

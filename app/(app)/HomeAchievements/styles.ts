@@ -5,6 +5,6 @@ export const kicker = "kicker text-gold";
 export const row = "flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4";
 export const badge =
   "card-volt-sm px-2.5 py-2 flex items-center gap-2 flex-none border-gold/40 shadow-glow-gold";
-export const icon = "text-base leading-none";
+export const icon = "w-4 h-4 flex-none";
 export const title =
   "text-[11px] font-extrabold uppercase tracking-wide whitespace-nowrap";

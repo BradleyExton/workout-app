@@ -1,5 +1,7 @@
 -- Milestone 9c: seed achievement rows. Idempotent via `on conflict (slug)`.
 -- Slugs must stay in sync with lib/domain/achievements.ts.
+-- `icon` is legacy: the UI renders SVG glyphs keyed by slug
+-- (components/ui/BadgeGlyph); no surface reads this column anymore.
 
 insert into public.achievements (slug, title, description, icon, criteria) values
   ('first_workout',  'First Workout',   'Complete your first workout.',              '🎉', '{"type":"workouts_finished","gte":1}'::jsonb),

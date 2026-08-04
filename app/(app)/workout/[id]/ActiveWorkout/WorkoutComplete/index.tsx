@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { BadgeGlyph } from "@/components/ui/BadgeGlyph";
 import * as buttonStyles from "@/components/ui/Button/styles";
 import { formatVolume } from "@/lib/format/volume";
 import { formatOneRm } from "@/lib/format/weight";
@@ -109,7 +110,9 @@ export const WorkoutComplete = ({
 
         {unlocks.newAchievements.map((a) => (
           <div key={a.slug} className={styles.badgeRow}>
-            <div className={styles.badgeCoin}>{a.icon ?? "★"}</div>
+            <div className={styles.badgeCoin}>
+              <BadgeGlyph slug={a.slug} className={styles.badgeGlyph} />
+            </div>
             <div>
               <p className={styles.badgeKicker}>
                 {workoutCompleteCopy.badgeDropKicker}

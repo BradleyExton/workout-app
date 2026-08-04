@@ -18,7 +18,7 @@ export const nextBlock = "flex flex-col gap-1.5 mt-1";
 export const nextLabelRow = "flex items-center justify-between kicker text-dust";
 export const nextValue = "text-gold tabular-nums";
 export const nextTarget = "flex items-center gap-2 min-w-0";
-export const nextIcon = "text-base leading-none";
+export const nextIcon = "w-4 h-4 flex-shrink-0 text-dust";
 export const nextName = "text-sm font-extrabold leading-tight truncate";
 // The "every badge unlocked" line is a sentence, not a title — let it wrap.
 export const nextNameDone = "text-sm font-extrabold leading-tight text-balance";
@@ -58,7 +58,8 @@ export const medalUnlocked =
 export const medalLatest =
   "border-[1.5px] border-gold bg-gradient-to-br from-gold/20 to-panel shadow-glow-gold";
 export const medalLocked = "border-[1.5px] border-edge bg-panel";
-export const badgeLockIcon = "w-4 h-4 text-dust-dim";
+export const badgeGlyph = "w-5 h-5";
+export const badgeGlyphLocked = "w-5 h-5 text-dust-dim";
 export const badgeName =
   "text-[11px] font-extrabold uppercase tracking-wide leading-tight text-balance";
 export const badgeNameLocked =
