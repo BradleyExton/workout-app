@@ -8,7 +8,7 @@ export const searchIcon = "w-4 h-4 flex-shrink-0 text-dust-dim";
 export const search =
   "w-full bg-transparent text-base font-semibold text-glow placeholder:text-dust-dim outline-none";
 
-export const chipRow = "flex gap-2 overflow-x-auto -mx-4 px-4 pb-1";
+export const chipRow = "flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4 pb-1";
 export const chipBase =
   "flex-shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-widest";
 export const chipActive =
