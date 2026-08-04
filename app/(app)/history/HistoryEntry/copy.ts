@@ -14,7 +14,7 @@ export const historyEntryCopy = {
       ? `${day} · ${durationMin} min`
       : `${day} · ${distanceKm.toFixed(1)} km · ${durationMin} min`,
 
-  statVolume: "Volume",
+  statVolume: "Volume kg",
   statExercises: "Exercises",
   statStarted: "Started",
   statDistance: "Distance",

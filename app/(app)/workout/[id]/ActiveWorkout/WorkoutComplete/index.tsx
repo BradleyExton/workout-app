@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import * as buttonStyles from "@/components/ui/Button/styles";
 import { formatVolume } from "@/lib/format/volume";
-import { formatWeight } from "@/lib/format/weight";
+import { formatOneRm } from "@/lib/format/weight";
 import type { WorkoutUnlocks } from "../../actions";
 import { workoutCompleteCopy } from "./copy";
 import * as styles from "./styles";
@@ -20,7 +20,7 @@ const formatPrValue = (
 ): string => {
   if (type === "volume") return formatVolume(value);
   if (type === "reps") return `${value} reps`;
-  return `${formatWeight(value)} kg`;
+  return `${formatOneRm(value)} kg`;
 };
 
 // One PR line per exercise: a single strong set can mint 1RM + volume +

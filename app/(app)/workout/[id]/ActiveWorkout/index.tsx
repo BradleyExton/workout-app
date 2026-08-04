@@ -9,7 +9,7 @@ import { CtaZone } from "@/components/ui/CtaZone";
 import * as ctaStyles from "@/components/ui/CtaZone/styles";
 import { useSessionClock } from "@/lib/hooks/useSessionClock";
 import type { MuscleGroup } from "@/lib/db/types";
-import { formatWeight } from "@/lib/format/weight";
+import { formatOneRm, formatWeight } from "@/lib/format/weight";
 import { formatVolume } from "@/lib/format/volume";
 import { relativeDays } from "@/lib/format/time";
 import { CurrentSetForm } from "./CurrentSetForm";
@@ -236,7 +236,7 @@ export const ActiveWorkout = ({
                           {activeWorkoutCopy.pr1rm}
                         </span>
                         <span className={styles.prPillValue}>
-                          {formatWeight(prs.oneRm)}
+                          {formatOneRm(prs.oneRm)}
                         </span>
                       </span>
                     )}

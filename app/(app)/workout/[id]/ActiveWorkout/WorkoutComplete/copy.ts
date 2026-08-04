@@ -7,7 +7,7 @@ export const workoutCompleteCopy = {
     `${durationMin} min · ${sets} ${sets === 1 ? "set" : "sets"}`,
   breakdownSets: "Sets",
   breakdownDuration: "Duration",
-  breakdownVolume: "Volume",
+  breakdownVolume: "Volume (kg)",
   durationValue: (durationMin: number): string => `${durationMin} min`,
   newPrLabel: "NEW PR",
   prExtra: (n: number): string => `(+${n} more)`,

@@ -163,17 +163,37 @@ export const HomeMetrics = ({
       <div className={styles.statsRow}>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statWorkouts}</p>
-          <p className={styles.statValue}>{metrics.workoutsThisWeek}</p>
+          <p
+            className={
+              metrics.workoutsThisWeek === 0
+                ? styles.statValueZero
+                : styles.statValue
+            }
+          >
+            {metrics.workoutsThisWeek}
+          </p>
         </Card>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statVolume}</p>
-          <p className={styles.statValue}>
+          <p
+            className={
+              metrics.volumeThisWeek === 0
+                ? styles.statValueZero
+                : styles.statValue
+            }
+          >
             {formatVolume(metrics.volumeThisWeek)}
           </p>
         </Card>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{homeMetricsCopy.statStreak}</p>
-          <p className={styles.statValue}>{metrics.streakDays}d</p>
+          <p
+            className={
+              metrics.streakDays === 0 ? styles.statValueZero : styles.statValue
+            }
+          >
+            {metrics.streakDays}d
+          </p>
         </Card>
       </div>
 

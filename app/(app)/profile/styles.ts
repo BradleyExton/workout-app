@@ -35,6 +35,9 @@ export const statLabel =
   "text-[9px] font-extrabold uppercase tracking-wider text-dust";
 export const statValue =
   "display text-2xl mt-0.5 leading-none text-pulse [text-shadow:0_0_12px_rgba(38,240,229,0.5)]";
+// A zero is information, not an achievement — no pulse, no glow.
+export const statValueZero =
+  "display text-2xl mt-0.5 leading-none text-dust-dim";
 
 /* ---- trophy case ----
  * Two columns: names and unlock conditions need the width, and a bare emoji

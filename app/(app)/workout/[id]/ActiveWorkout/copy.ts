@@ -20,7 +20,7 @@ export const activeWorkoutCopy = {
   prReps: "REPS",
   newPr: "NEW PR",
   sessionLabel: "Session",
-  statVolume: "Volume",
+  statVolume: "Volume kg",
   statSets: "Sets",
   statExercises: "Exercises",
   todayLabel: "Today",

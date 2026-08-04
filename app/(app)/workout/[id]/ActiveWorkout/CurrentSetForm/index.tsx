@@ -132,6 +132,7 @@ export const CurrentSetForm = ({
               inputMode="decimal"
               step="0.5"
               min="0"
+              placeholder={currentSetCopy.weightPlaceholder}
               aria-invalid={error?.field === "weight"}
               value={weight}
               onChange={(event) => {
@@ -153,6 +154,7 @@ export const CurrentSetForm = ({
               inputMode="numeric"
               step="1"
               min="1"
+              placeholder={currentSetCopy.repsPlaceholder}
               aria-invalid={error?.field === "reps"}
               value={reps}
               onChange={(event) => {

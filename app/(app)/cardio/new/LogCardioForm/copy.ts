@@ -8,8 +8,12 @@ export const cardioFormCopy = {
   whenLabel: "When",
   distanceLabel: "Distance",
   distanceUnit: "km",
+  // Ghost values so the big empty tiles read as "type here", not as a
+  // rendering bug. Clearly zero, so they can't be mistaken for prefills.
+  distancePlaceholder: "0.0",
   durationLabel: "Duration",
   durationUnit: "min",
+  durationPlaceholder: "0",
   timeFieldLabel: (when: Exclude<WhenChoice, "now">): string =>
     when === "yesterday" ? "Started yesterday at" : "Started today at",
   submit: "LOG CARDIO →",

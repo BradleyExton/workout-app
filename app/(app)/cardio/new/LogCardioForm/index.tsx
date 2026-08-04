@@ -213,6 +213,7 @@ export const LogCardioForm = (): JSX.Element => {
               inputMode="decimal"
               step="0.1"
               min="0"
+              placeholder={cardioFormCopy.distancePlaceholder}
               aria-invalid={error === "distance"}
               value={distance}
               onChange={(event) => {
@@ -234,6 +235,7 @@ export const LogCardioForm = (): JSX.Element => {
               inputMode="numeric"
               step="1"
               min="1"
+              placeholder={cardioFormCopy.durationPlaceholder}
               aria-invalid={error === "duration"}
               value={duration}
               onChange={(event) => {

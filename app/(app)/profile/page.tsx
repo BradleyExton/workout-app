@@ -189,15 +189,33 @@ export default async function ProfilePage(): Promise<JSX.Element> {
       <div className={styles.statsRow}>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{profileCopy.statWorkouts}</p>
-          <p className={styles.statValue}>{workoutCount ?? 0}</p>
+          <p
+            className={
+              (workoutCount ?? 0) === 0 ? styles.statValueZero : styles.statValue
+            }
+          >
+            {workoutCount ?? 0}
+          </p>
         </Card>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{profileCopy.statCardio}</p>
-          <p className={styles.statValue}>{cardioCount ?? 0}</p>
+          <p
+            className={
+              (cardioCount ?? 0) === 0 ? styles.statValueZero : styles.statValue
+            }
+          >
+            {cardioCount ?? 0}
+          </p>
         </Card>
         <Card variant="panel" size="sm" className={styles.statCard}>
           <p className={styles.statLabel}>{profileCopy.statBadges}</p>
-          <p className={styles.statValue}>{unlockedIds.size}</p>
+          <p
+            className={
+              unlockedIds.size === 0 ? styles.statValueZero : styles.statValue
+            }
+          >
+            {unlockedIds.size}
+          </p>
         </Card>
       </div>
 

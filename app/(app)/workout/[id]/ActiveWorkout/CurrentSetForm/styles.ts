@@ -13,7 +13,7 @@ export const field =
   "rounded-xl border border-edge bg-void/40 p-3 flex flex-col items-center gap-1";
 export const fieldLabel = "text-[9px] font-extrabold uppercase text-dust";
 export const input =
-  "display text-3xl w-full text-center bg-transparent text-glow outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+  "display text-3xl w-full text-center bg-transparent text-glow placeholder:text-dust-dim outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 export const fieldUnit = "text-[10px] font-bold text-dust";
 
 // Ring, not border: stacking a second border-color utility on `field`
