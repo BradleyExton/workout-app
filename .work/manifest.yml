@@ -1,0 +1,21 @@
+# Project manifest for workout-app's work-log (claude-dev-system SCHEMA §6).
+# Onboarded 2026-08-04 (second external testbed, after wing-night).
+id_prefix: WO                        # ticket ids: WO-<n>
+tickets_dir: .work/tickets
+landing: direct-main                 # solo personal app — land straight to main (no PRs)
+verify:
+  lint:      "yarn lint"                 # clean after eslint.config.mjs ignores .claude/** (stale worktrees)
+  typecheck: "yarn tsc --noEmit"         # deliberately not a package.json script — keeps the manifest self-contained
+  build:     "yarn build"
+  # test: none yet — WO-1 tracks adding a test harness; until then lint+typecheck+build IS the gate,
+  # and work with no machine-checkable AC beyond these is NOT an autonomy candidate (verification.md).
+  dev:       "yarn dev"                  # local dev server, for browser-verify
+src_globs:
+  - "app/**/*.ts"
+  - "app/**/*.tsx"
+  - "components/**/*.ts"
+  - "components/**/*.tsx"
+  - "lib/**/*.ts"
+  - "lib/**/*.tsx"
+  - "proxy.ts"
+rules: [code-design, testing]

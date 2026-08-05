@@ -46,3 +46,10 @@ next-env.d.ts
 
 # dev screenshots (root only — not public/ or design/)
 /*.png
+
+# work-log runtime state (claude-dev-system)
+.work/gate1-approval.json
+.work/gate2-approval.json
+.work/verify-gate.active
+.work/verify-gate.state.json
+.work/verdicts/

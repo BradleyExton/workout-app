@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Not app source: agent worktrees + generated supabase artifacts.
+    ".claude/**",
+    "supabase/.temp/**",
   ]),
 ]);
 
