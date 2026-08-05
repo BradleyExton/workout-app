@@ -24,7 +24,7 @@ export const nextName = "text-sm font-extrabold leading-tight truncate";
 export const nextNameDone = "text-sm font-extrabold leading-tight text-balance";
 export const nextTrack =
   "h-2.5 rounded-full border border-edge bg-void/60 overflow-hidden";
-export const nextFill = "h-full rounded-full bg-gold shadow-glow-gold";
+export const nextFill = "h-full rounded-full bg-gold shadow-glow-gold fills";
 export const nextCondition = "text-[11px] font-semibold text-dust";
 export const nextNote = "text-[10px] font-semibold text-dust-dim";
 

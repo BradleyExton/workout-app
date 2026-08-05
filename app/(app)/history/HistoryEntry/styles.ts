@@ -1,6 +1,6 @@
 export const entryCard = "p-0 overflow-hidden";
 export const entryHeader =
-  "w-full p-3 flex items-center gap-3 text-left active:scale-[0.99] transition-transform";
+  "w-full p-3 flex items-center gap-3 text-left settles active:scale-[0.99]";
 
 export const entryIconBase =
   "w-10 h-10 flex-shrink-0 rounded-xl border flex items-center justify-center";
@@ -13,8 +13,7 @@ export const entryBody = "flex-1 min-w-0 flex flex-col";
 export const entryTitle = "display text-sm leading-tight";
 export const entryDetail = "text-[11px] font-semibold text-dust mt-0.5";
 
-export const chevron =
-  "w-4 h-4 flex-shrink-0 text-dust-dim transition-transform duration-150";
+export const chevron = "w-4 h-4 flex-shrink-0 text-dust-dim settles";
 export const chevronOpen = `${chevron} rotate-180`;
 
 /* ---- expanded panel ---- */

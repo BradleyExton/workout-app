@@ -17,7 +17,7 @@ export const chipIdle = "border border-edge text-dust";
 
 export const list = "flex flex-col gap-2";
 export const rowButton =
-  "flex items-center justify-between gap-3 w-full text-left card-volt-sm px-4 py-3 active:scale-[0.98] transition-transform";
+  "flex items-center justify-between gap-3 w-full text-left card-volt-sm px-4 py-3 settles active:scale-[0.98]";
 export const rowDisabled = "opacity-60";
 export const rowName = "font-extrabold text-base leading-tight";
 export const rowBadge = "flex-shrink-0 text-[10.5px] font-semibold text-dust";

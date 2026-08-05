@@ -30,7 +30,7 @@ export const progressLabelRow =
 export const progressTrack =
   "h-3 rounded-full border border-edge bg-void/60 overflow-hidden";
 export const progressFill =
-  "h-full rounded-full bg-gradient-to-r from-plasma-pink via-plasma-violet to-pulse";
+  "h-full rounded-full bg-gradient-to-r from-plasma-pink via-plasma-violet to-pulse fills";
 
 export const lastSessionCard = "p-3";
 export const lastSessionHeader = "flex items-center justify-between mb-2";
@@ -60,7 +60,7 @@ export const todaySection = "mt-1";
 export const todayLabel = "kicker text-dust mb-2";
 export const todayList = "flex flex-col gap-2";
 export const todayRow =
-  "card-volt-sm w-full px-3 py-2.5 flex items-center gap-2 text-left active:scale-[0.98] transition-transform";
+  "card-volt-sm w-full px-3 py-2.5 flex items-center gap-2 text-left settles active:scale-[0.98]";
 export const todayName = "font-extrabold text-sm flex-1";
 export const todayStats = "text-[10px] font-bold text-dust";
 export const todayChevron = "text-dust font-extrabold text-lg leading-none";

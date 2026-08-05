@@ -1,16 +1,21 @@
 export const list = "flex flex-col gap-2";
 export const rowCard = "px-0 py-0 overflow-hidden";
 export const rowButton =
-  "w-full px-3.5 py-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform";
+  "w-full px-3.5 py-2.5 flex items-center gap-3 text-left settles active:scale-[0.99]";
 export const number = "display text-lg w-7 text-center text-dust";
 export const value = "font-bold flex-1 tabular-nums";
 // Synced = success = pulse's job; gold stays reserved for the PR reward.
+// The check pops because swapping `animate-pulse` for a different keyframe
+// starts the new animation — the set visibly lands rather than just
+// changing colour under you.
 export const check =
-  "w-6 h-6 rounded-full border border-pulse/40 bg-pulse/15 text-pulse flex items-center justify-center text-xs font-extrabold";
+  "w-6 h-6 rounded-full border border-pulse/40 bg-pulse/15 text-pulse flex items-center justify-center text-xs font-extrabold animate-pop-in";
 export const pending =
   "w-6 h-6 rounded-full border border-edge text-dust flex items-center justify-center text-xs font-extrabold animate-pulse";
+// Mounts only when the set mints a record, so the keyframe fires exactly
+// on the moment worth marking.
 export const prBadge =
-  "rounded-full border border-gold/40 bg-gold/10 text-gold shadow-glow-gold px-2 py-0.5 text-[9px] font-extrabold tracking-wider";
+  "rounded-full border border-gold/40 bg-gold/10 text-gold shadow-glow-gold px-2 py-0.5 text-[9px] font-extrabold tracking-wider animate-pop-in";
 
 export const editWrap = "px-3.5 pb-3 pt-1 border-t border-edge";
 export const editGrid = "grid grid-cols-2 gap-2 mt-2";

@@ -24,6 +24,61 @@
   --shadow-glow-gold: 0 0 18px rgb(255 201 60 / 0.5);
 
   --tracking-display: 0.01em;
+
+  /* ---- Motion ---------------------------------------------------------
+   * Three speeds and two curves, so nothing picks its own timing.
+   *   quick     — press feedback and colour swaps, under the tap.
+   *   smooth    — layout: enter/exit, expand/collapse, bars filling.
+   *   celebrate — reward moments only (badge drops), long enough to watch.
+   * ease-out-soft settles; ease-pop overshoots and is reserved for things
+   * the user *earned*, the motion counterpart of the gold accent rule. */
+  --duration-quick: 150ms;
+  --duration-smooth: 300ms;
+  --duration-celebrate: 600ms;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-fade-in: fade-in var(--duration-smooth) var(--ease-out-soft) both;
+  --animate-rise: rise var(--duration-smooth) var(--ease-out-soft) both;
+  --animate-pop-in: pop-in var(--duration-smooth) var(--ease-pop) both;
+  --animate-badge-drop: badge-drop var(--duration-celebrate) var(--ease-pop)
+    both;
+
+  /* A surface arriving whole — full-screen takeovers, backdrops. */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Entering content lifts into place — used for stat rows and banners. */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  /* Earned things arrive: a PR chip, a filled pip, a synced check. */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+  }
+
+  /* The badge drop: falls in, overshoots, and its gold glow blooms last. */
+  @keyframes badge-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.9);
+      box-shadow: 0 0 0 rgb(255 201 60 / 0);
+    }
+    60% {
+      opacity: 1;
+      box-shadow: 0 0 0 rgb(255 201 60 / 0);
+    }
+  }
 }
 
 /* Extract load-bearing class combos once they repeat 3+ times across styles.ts
@@ -47,6 +102,22 @@
   }
 }
 
+/* A state swap that settles instead of snapping — press feedback, a chip
+ * going active, a pip lighting up. Only the timing is shared; pair it with
+ * the `active:` transform or colour change at the call site, since how far
+ * a thing gives is a function of how big it is. */
+@utility settles {
+  transition-property: transform, opacity, color, background-color,
+    border-color, box-shadow;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-out-soft);
+}
+
+/* Bars whose width is driven by an inline style: fill, don't jump. */
+@utility fills {
+  transition: width var(--duration-smooth) var(--ease-out-soft);
+}
+
 @utility kicker {
   @apply text-[10px] font-extrabold uppercase tracking-widest;
 }
@@ -65,4 +136,20 @@ body {
   );
   background-repeat: no-repeat;
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* One switch for the whole app. Motion here is decoration on top of state
+ * that is already legible without it, so honouring the preference means
+ * cutting the motion, not substituting a gentler one. Near-zero rather
+ * than `none` so `both`-filled keyframes still land on their end state
+ * and animationend listeners still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

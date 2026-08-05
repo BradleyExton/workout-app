@@ -50,6 +50,20 @@ const dedupePrs = (prs: WorkoutUnlocks["newPrs"]): PrLine[] => {
   });
 };
 
+// The celebration plays as a sequence: the summary of what you did, then
+// the records, then the badges you earned. Delays are declared here rather
+// than in styles.ts because the badge cascade — and so where the CTA lands
+// — depends on how many badges dropped.
+const STAGGER_MS = {
+  burst: 0,
+  breakdown: 90,
+  prs: 180,
+  firstBadge: 300,
+  betweenBadges: 160,
+} as const;
+
+const delay = (ms: number) => ({ animationDelay: `${ms}ms` });
+
 export const WorkoutComplete = ({
   setsCount,
   volume,
@@ -58,11 +72,15 @@ export const WorkoutComplete = ({
   onContinue,
 }: WorkoutCompleteProps): JSX.Element => {
   const durationMin = Math.max(1, Math.round(durationMs / 60_000));
+  const badgeCount = unlocks.newAchievements.length;
+  const ctaDelayMs = badgeCount
+    ? STAGGER_MS.firstBadge + badgeCount * STAGGER_MS.betweenBadges
+    : STAGGER_MS.prs + STAGGER_MS.breakdown;
 
   return (
     <div className={styles.screen}>
       <div className={styles.inner}>
-        <div className={styles.burst}>
+        <div className={styles.burst} style={delay(STAGGER_MS.burst)}>
           <p className={styles.burstKicker}>{workoutCompleteCopy.kicker}</p>
           <h1 className={styles.burstTitle}>{workoutCompleteCopy.title}</h1>
           <p className={styles.burstSummary}>
@@ -72,7 +90,10 @@ export const WorkoutComplete = ({
 
         {/* TODO(xp): each row gains a gold XP amount column ("+280"),
             plus rows for the finish bonus and streak multiplier. */}
-        <div className={styles.breakdownCard}>
+        <div
+          className={styles.breakdownCard}
+          style={delay(STAGGER_MS.breakdown)}
+        >
           <div className={styles.breakdownRow}>
             <span>{workoutCompleteCopy.breakdownSets}</span>
             <span className={styles.breakdownValue}>{setsCount}</span>
@@ -90,7 +111,7 @@ export const WorkoutComplete = ({
         </div>
 
         {unlocks.newPrs.length > 0 && (
-          <div className={styles.prCard}>
+          <div className={styles.prCard} style={delay(STAGGER_MS.prs)}>
             {dedupePrs(unlocks.newPrs).map((pr, i) => (
               <div key={`pr-${i}`} className={styles.prRow}>
                 <span className={styles.prTag}>
@@ -108,8 +129,14 @@ export const WorkoutComplete = ({
           </div>
         )}
 
-        {unlocks.newAchievements.map((a) => (
-          <div key={a.slug} className={styles.badgeRow}>
+        {unlocks.newAchievements.map((a, i) => (
+          <div
+            key={a.slug}
+            className={styles.badgeRow}
+            style={delay(
+              STAGGER_MS.firstBadge + i * STAGGER_MS.betweenBadges,
+            )}
+          >
             <div className={styles.badgeCoin}>
               <BadgeGlyph slug={a.slug} className={styles.badgeGlyph} />
             </div>
@@ -127,6 +154,7 @@ export const WorkoutComplete = ({
         <button
           type="button"
           className={`${buttonStyles.variant.primary} ${styles.cta}`}
+          style={delay(ctaDelayMs)}
           onClick={onContinue}
         >
           {workoutCompleteCopy.continueCta}
