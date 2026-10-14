@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "env:sync": "op inject -f -i .env.tmpl -o .env.local && chmod 600 .env.local"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

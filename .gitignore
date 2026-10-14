@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.local.example
+!.env.tmpl
 
 # vercel
 .vercel
@@ -53,3 +54,5 @@ next-env.d.ts
 .work/verify-gate.active
 .work/verify-gate.state.json
 .work/verdicts/
+
+supabase/.temp/
